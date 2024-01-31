@@ -16,11 +16,12 @@ joystickSpeed = 'LAS -Y'
 joystickSteering = 'LAS -X'
 pollInterval = 0.1
 
+speed = 0.5
+running = False
+
 def main(inSpeed):
     robot = Robot()
     # Set some initial state
-    global running
-    global speed
     running = True
     speed = inSpeed
     steering = 0.0
@@ -67,15 +68,14 @@ def main(inSpeed):
     gamepad.addButtonPressedHandler(buttonExit, exitButtonPressed)
     gamepad.addButtonPressedHandler(speedUp, speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, speedDownPressed)
-    gamepad.addButtonPressedHandler(joystickSpeed, joystickSpeedPressed)
-    gamepad.addButtonPressedHandler(joystickSteerin, joystickSteeringPressed)
+    #gamepad.addButtonPressedHandler(joystickSpeed, joystickSpeedPressed)
+    #gamepad.addButtonPressedHandler(joystickSteerin, joystickSteeringPressed)
     
     while True:
         # Your robot control logic here
         print(f"Left Motor: {robot.left_motor.value}, Right Motor: {robot.right_motor.value}, Speed: {speed}")
         # Adjust your robot control logic based on the speed argument
         time.sleep(0.1)
-
     robot.stop()
 
 

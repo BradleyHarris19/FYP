@@ -8,17 +8,19 @@ import argparse
 # Gamepad settings
 gamepadType = Gamepad.PG9099
 buttonExit = 'Y'
-speedUp = 'LB'
-speedDown = 'RB'
+speedUp = 'RB'
+speedDown = 'LB'
 joystickSpeed = 'LAS -Y'
 joystickSteering = 'LAS -X'
-pollInterval = 0.1
+pollInterval = 0.01
 
 class drive(object):
     def __init__(self, robot, inSpeed):
         self.robot = robot
         self.running = True
-        self.speed  = inSpeed
+        self.speed = inSpeed
+        self.forward = 0.0
+        self.steering = 0.0
 
     #Create some callback functions for single events
     def exitButtonPressed(self):
@@ -26,13 +28,33 @@ class drive(object):
         self.running = False
     def speedUpPressed(self):
         self.speed = min(1.0, self.speed + 0.1)# Increase speed by 0.1,but ensure it doesn't go above 1
+        print(f"Speed: {self.speed}")
     def speedDownPressed(self):
         self.speed = max(0, self.speed - 0.1)  # Decrease speed by 0.1, but ensure it doesn't go below 0
+        print(f"Speed: {self.speed}")
+    
+    
+    def write(self):
+        # Calculate left and right motor speeds based on steering and forward values
+        left_speed = self.forward + (self.steering * 0.75)
+        right_speed = self.forward - (self.steering * 0.75)
+
+        # Scale the speeds by the overall speed scaler
+        left_speed *= self.speed
+        right_speed *= self.speed
+
+        # Ensure motor speeds stay between 0 and 1
+        left_speed = max(-1, min(1, left_speed))
+        right_speed = max(-1, min(1, right_speed))
+
+        # write to the motors
+        self.robot.left_motor.value = left_speed
+        self.robot.right_motor.value = right_speed
 
 
-def main():
+def main(baseSpeed):
     robot = Robot()
-    driver = drive(robot)
+    driver = drive(robot, baseSpeed)
 
     #wait for gamepad connection
     if not Gamepad.available():
@@ -42,43 +64,34 @@ def main():
     gamepad = gamepadType()
     print('Gamepad connected')
 
-    '''
-    def joystickSpeedPressed():
-        if gamepad.axis(joystickSpeed) > 0:
-            robot.left_motor.value = speed
-            robot.right_motor.value = speed
-
-        if gamepad.axis(joystickSpeed) < 0:
-            robot.left_motor.value = -speed
-            robot.right_motor.value = -speed
-
-    def joystickSteeringPressed():
-        if gamepad.axis(joystickSteering) > 0:
-            robot.left_motor.value = -speed
-            robot.right_motor.value = speed
-
-        if gamepad.axis(joystickSteering) < 0:
-            robot.left_motor.value = speed
-            robot.right_motor.value = -speed
-    '''
-
     # Start the background updating
     gamepad.startBackgroundUpdates()
     # Register the callback functions
     gamepad.addButtonPressedHandler(buttonExit, driver.exitButtonPressed)
     gamepad.addButtonPressedHandler(speedUp, driver.speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, driver.speedDownPressed)
-    #gamepad.addButtonPressedHandler(joystickSpeed, driver.joystickSpeedPressed)
-    #gamepad.addButtonPressedHandler(joystickSteerin, driver.joystickSteeringPressed)
     
-    while driver.running:
-        # Your robot control logic here
-        print(f"Left Motor: {robot.left_motor.value}, Right Motor: {robot.right_motor.value}, Speed: {speed}")
-        # Adjust your robot control logic based on the speed argument
-        time.sleep(0.1)
+    try:
+        while driver.running and gamepad.isConnected():
+            start_time = time.time()
 
-    robot.stop()
+            #update stick positions
+            driver.forward = -gamepad.axis(joystickSpeed)
+            driver.steering = gamepad.axis(joystickSteering)
+            driver.write()
 
+            # Adjust your robot control logic based on the speed argument
+            time.sleep(pollInterval)
+            
+            end_time = time.time()
+            execution_time = end_time - start_time
+            
+            # Your robot control logic here
+            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
+    
+    finally:
+        robot.stop()
+        gamepad.disconnect()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
