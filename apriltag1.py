@@ -8,11 +8,13 @@ import cv2
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="path to input image containing AprilTag")
+ap.add_argument("-d", "--display", required=True, help="enable/disable display")
 args = vars (ap.parse_args())
 
 #load the input image and convert it to grayscale
 print("[INFO] loading image...")
 image = cv2.imread(args["image"])
+display = bool(args["display"])
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # define the AprilTags detector options and then detect the AprilTags # in the input image
@@ -45,5 +47,10 @@ for r in results:
     cv2.putText(image, tagFamily, (ptA[0], ptA[1]-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     print(f"[INFO] tag family: {tagFamily}")
 
-cv2.imshow("Image", image)
-cv2.waitKey(0)
+if display:
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+else:
+    base, extension = args["image"].rsplit('.', 1)
+    outimage = f"{base}_out.{extension}"
+    cv2.imwrite(outimage, image)
