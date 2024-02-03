@@ -1,6 +1,5 @@
-#!/bin/python3.6
 
-from Gamepad import Gamepad
+m Gamepad import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
@@ -98,3 +97,4 @@ if __name__ == "__main__":
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
     args = parser.parse_args()
     main(args.speed)
+
