@@ -11,18 +11,18 @@ mtx, dist, rvecs, tvecs = camera_calibration
 
 detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0, 
                     refine_edges=1, decode_sharpening=0.25, debug=0)
-tags = detector.detect(image)
-r = tags[0]
-image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
 h,  w = image.shape[:2]
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-
 # undistort
 image = cv2.undistort(image, mtx, dist, None, newcameramtx)
 # crop the image
 x, y, w, h = roi
 image = image[y:y+h, x:x+w]
+
+tags = detector.detect(image)
+r = tags[0]
+image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
 # extract the bounding box (x, y)-coordinates for the AprilTag # and convert each of the (x, y)-coordinate pairs to integers 
 (ptA, ptB, ptC, ptD) = r.corners
@@ -48,7 +48,7 @@ cv2.putText(image, tagFamily, (ptA[0], ptA[1]-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5
 print(f"[INFO] tag family: {tagFamily}")
 
 base, extension = imagepath.rsplit('.', 1)
-outimage = f"{base}_out.{extension}"
+outimage = f"{base}_out_undistorted.{extension}"
 cv2.imwrite(outimage, image)
 
 scp_command = [ 'scp', outimage, 'bradley@10.0.0.1:/home/bradley/Downloads']
