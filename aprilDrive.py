@@ -85,7 +85,6 @@ class Camera(object):
     def read(self):
         ret, img = self.capture.read()
         if ret == 0: return False, 0
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img = self.undistort(img)
         return True, img
 
@@ -164,6 +163,10 @@ def main(baseSpeed):
     gamepad.addButtonPressedHandler(speedUp, driver.speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, driver.speedDownPressed)
     
+    detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0,\
+           refine_edges=1, decode_sharpening=0.25, debug=0)
+    cam = Camera(0, (640, 480), 30, True)
+    
     try:
         while driver.running and gamepad.isConnected():
             """
@@ -183,20 +186,19 @@ def main(baseSpeed):
             # Your robot control logic here
             print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
             """
-            detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0,\
-                    refine_edges=1, decode_sharpening=0.25, debug=0)
 
-            cam = Camera(0, (640, 480), 30, True)
             ret, image = cam.read()
-            if ret == False: continue
+            if (ret == False): continue
 
-            tags = detector.detect(image)
+            tags = detector.detect(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
             realTags = [tag for tag in tags if tag.decision_margin > 15]
             #print([tag.decision_margin for tag in realTags])
-            tag = realTags[0]
-            image = drawCorners(image, tag)
-            image = drawCenter(image, tag)
-            image = drawName(image, tag)
+            print(type(image))
+            if len(realTags) > 0:
+                tag = realTags[0]
+                image, corners = drawCorners(image, tag)
+                image = drawCenter(image, tag)
+                image, tagfamily = drawName(image, tag, corners)
 
             cam.stream(image)
 
