@@ -44,10 +44,9 @@ def drawCorners(img, tag):
     cv2.line(img, ptB, ptC, (255,   0,   0), 1) 
     cv2.line(img, ptC, ptD, (  0, 255,   0), 1) 
     cv2.line(img, ptD, ptA, (  0,   0, 255), 1)
-    return img, [ptA, ptB, ptC, ptD]
+    return img
 
 def drawCenter(img, tag):
-    (cX, cY) = (int(tag.center[0]), int(tag.center[1]))
     (cX, cY) = (int(tag.center[0]), int(tag.center[1]))
     cv2.circle(img, (cX, cY), 2, (255, 0, 255), -1)
     return img
@@ -144,7 +143,7 @@ def controller(object):
     def forward(self):
         pass
 
-def main(baseSpeed):
+def main(baseSpeed, stream):
     robot = Robot()
     driver = drive(robot, baseSpeed)
 
@@ -165,7 +164,7 @@ def main(baseSpeed):
     
     detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0,\
            refine_edges=1, decode_sharpening=0.25, debug=0)
-    cam = Camera(0, (640, 480), 30, True)
+    cam = Camera(0, (640, 480), 30, stream)
     
     try:
         while driver.running and gamepad.isConnected():
@@ -196,14 +195,17 @@ def main(baseSpeed):
             print(type(image))
             if len(realTags) > 0:
                 tag = realTags[0]
-                image, corners = drawCorners(image, tag)
-                image = drawCenter(image, tag)
-                image, tagfamily = drawName(image, tag, corners)
+                corners = tag.corners.astype(int)
+                center = tag.center.astype(int)
+                if stream:
+                    image = drawCorners(image, tag)
+                    image = drawCenter(image, tag)
+                    image, tagfamily = drawName(image, tag, corners)
+                print(f"Tag position  X: {center[0]}, Y: {center[1]}")
 
-            cam.stream(image)
-
-
-
+            if stream: 
+                cam.stream(image)
+        
     finally:
         robot.stop()
         gamepad.disconnect()
@@ -211,5 +213,6 @@ def main(baseSpeed):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
+    parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
     args = parser.parse_args()
-    main(args.speed)
+    main(args.speed, args.stream)
