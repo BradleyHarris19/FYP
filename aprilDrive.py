@@ -84,10 +84,10 @@ class Camera(object):
 
     def read(self):
         ret, img = self.capture.read()
+        if ret == 0: return False, 0
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        if ret == 0: return 0
         img = self.undistort(img)
-        return img
+        return True, img
 
     def stream(self, img, resize:tuple=(320, 240)):
         if hasattr(self, 'clientAddress') and self.clientAddress is not None:
@@ -187,8 +187,8 @@ def main(baseSpeed):
                     refine_edges=1, decode_sharpening=0.25, debug=0)
 
             cam = Camera(0, (640, 480), 30, True)
-            image = cam.read()
-            if image == 0: continue
+            ret, image = cam.read()
+            if ret == False: continue
 
             tags = detector.detect(image)
             realTags = [tag for tag in tags if tag.decision_margin > 15]
