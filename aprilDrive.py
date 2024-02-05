@@ -188,6 +188,7 @@ def main(baseSpeed):
 
             cam = Camera(0, (640, 480), 30, True)
             image = cam.read()
+            if image == 0: continue
 
             tags = detector.detect(image)
             realTags = [tag for tag in tags if tag.decision_margin > 15]
@@ -196,7 +197,7 @@ def main(baseSpeed):
             image = drawCorners(image, tag)
             image = drawCenter(image, tag)
             image = drawName(image, tag)
-            
+
             cam.stream(image)
 
 
