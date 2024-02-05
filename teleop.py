@@ -1,5 +1,5 @@
 
-m Gamepad import Gamepad
+from Gamepad import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse

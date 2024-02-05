@@ -3,7 +3,7 @@ import numpy as np
 from dt_apriltags import Detector 
 
 
-imagepath = 'captured_img/captured_image.jpg'
+imagepath = 'captured_img/captured_image1.jpg'
 image = cv2.imread(imagepath, cv2.IMREAD_GRAYSCALE)
 
 detector = Detector(families='tag16h5',

@@ -1,3 +1,4 @@
+import time
 import cv2
 import socket
 import pickle
@@ -7,16 +8,21 @@ from dt_apriltags import Detector
 
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('0.0.0.0', 5555))
+try:
+    server_socket.bind(('0.0.0.0', 5555))
+    port = "5555"
+except OSError as e:
+    server_socket.bind(('0.0.0.0', 5565))
+    port = "5565"
 server_socket.listen(5)
-print("Server is listening...")
+print(f"Server is listening on port {port}...")
 client_socket, client_address = server_socket.accept()
 print(f"Connection from {client_address} accepted")
 
 # Create a GStreamer pipeline for the CSI camera
 video_source=0
 gst_str = f'nvarguscamerasrc sensor-id={video_source} ! video/x-raw(memory:NVMM), width=640, height=480,\
-                format=(string)NV12, framerate=(fraction)10/1 ! nvvidconv ! video/x-raw, \
+                format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv ! video/x-raw, \
                 format=(string)BGRx! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
 cap = cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
 
@@ -26,6 +32,10 @@ mtx, dist, rvecs, tvecs = camera_calibration
 detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0,\
                     refine_edges=1, decode_sharpening=0.25, debug=0)
 
+# Set the frame rate
+frame_rate = 10  # Desired frame rate for streaming
+prev_time = time.time()
+
 while True:
     ret, image = cap.read()
     img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -34,8 +44,15 @@ while True:
     
     #print(f"============== image shape: {image.shape}")
     tags = detector.detect(img)
-    if len(tags) > 0:
-        r = tags[0]
+    realTags = [tag for tag in tags if tag.decision_margin > 15]
+    print([tag.decision_margin for tag in realTags])
+
+    # Check the time elapsed
+    current_time = time.time()
+    elapsed_time = current_time - prev_time
+    
+    if tag.id == 0:
+    #for r in realTags:   
 
         # extract the bounding box (x, y)-coordinates for the AprilTag # and convert each of the (x, y)-coordinate pairs to integers
         (ptA, ptB, ptC, ptD) = r.corners
@@ -59,35 +76,14 @@ while True:
         tagFamily = r.tag_family.decode("utf-8")
         cv2.putText(image, tagFamily, (ptA[0], ptA[1]-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         #print(f"[INFO] tag family: {tagFamily}")
+    
+    if elapsed_time > 1.0 / frame_rate:
+        prev_time = current_time
 
-        #print(r.homography)
-        _, R, T, N = cv2.decomposeHomographyMat(r.homography, mtx)
-
-        R = np.array(R, np.float64)
-        T = np.array(T, np.float64)
-        N = np.array(N, np.float64)
-
-        #print(f"Rotation matrix: {type(R)} {R.shape} \n{R}")
-        #print(f"Translation vector: {type(T)} {T.shape} \n{T}")
-        #print(f"Normal vector of plane: {type(N)} {N.shape} \n{N}")
-        """
-        #axes = 2*np.sqrt((ptA[0] - ptB[0])**2 + (ptB[1] - ptA[1])**2)
-        #print(axes)
-        axis = np.float32([[1,0,0], [0,1,0], [0,0,-1]]).reshape(-1,3)
-        # project 3D points to image plane
-        imgpts, jac = cv2.projectPoints(axis, R[1], T[1], mtx, dist)
-        print(imgpts)
-
-        corner = ptC
-        cv2.line(image, corner, tuple(imgpts[0].ravel()), (255,0,0), 1)
-        cv2.line(image, corner, tuple(imgpts[1].ravel()), (0,255,0), 1)
-        cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 1)
-        """
-    image = cv2.resize(image, (320, 240))
-    frame_data = pickle.dumps(image)
-    client_socket.sendall(struct.pack("Q", len(frame_data)))
-    client_socket.sendall(frame_data)
-    if cv2.waitKey(1) == 13:
-        break
+        image = cv2.resize(image, (320, 240))
+        frame_data = pickle.dumps(image)
+        client_socket.sendall(struct.pack("Q", len(frame_data)))
+        client_socket.sendall(frame_data)
+    
 cap.release()
 client_socket.close()
