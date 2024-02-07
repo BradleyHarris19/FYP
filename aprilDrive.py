@@ -134,6 +134,8 @@ class drive(object):
         # write to the motors
         self.robot.left_motor.value = left_speed
         self.robot.right_motor.value = right_speed
+        print(f"Left Motor: {left_speed:.2f}, Right Motor: {right_speed:.2f}, Speed: {self.speed:.2f}")
+        #, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
 
 def steering(center:np.array, resolution:tuple):
         posx = (center[0] - (resolution[0]/2)) / resolution[0]
@@ -142,8 +144,8 @@ def steering(center:np.array, resolution:tuple):
         
 def forward(corners:np.array, ta:int):
     (ptA, ptB, ptC, ptD) = corners
-    tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
-    vel = (tag_area - ta)/-ta
+    cd = np.sqrt((ptC[0]-ptD[0])**2+(ptC[1]-ptD[1])**2)
+    vel = (cd - ta)/-ta
     return vel
 
 
@@ -188,7 +190,6 @@ def main(baseSpeed, stream):
             execution_time = end_time - start_time
             
             # Your robot control logic here
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
             """
 
             ret, image = cam.read()
@@ -209,15 +210,18 @@ def main(baseSpeed, stream):
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
 
                 rot = steering(center, resolution)
-                fwd = forward(corners, 1000)
-                print(f"{rot} == {fwd}")
+                fwd = forward(corners, 50)
+                #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
                 if stream:
                     cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-
-                driver.forward = fwd/2
-                driver.steering = rot/2
-                driver.write
+                
+                driver.forward = fwd
+                driver.steering = rot
+            else:
+                driver.forward = 0
+                driver.steering = 0
+            driver.write()
 
             if stream: 
                 cam.stream(image)
