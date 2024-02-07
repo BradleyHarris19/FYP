@@ -8,9 +8,9 @@ import argparse
 gamepadType = Gamepad.PG9099
 buttonExit = 'Y'
 right_speedUp = 'RB'
-right_speedDown = 'RT'
-left_speedUp = 'LB'
-left_speedDown = 'LT'
+right_speedDown = 'LB'
+left_speedUp = 'B'
+left_speedDown = 'X'
 pollInterval = 0.01
 
 class drive(object):
@@ -18,8 +18,8 @@ class drive(object):
         self.robot = robot
         self.running = True
         self.speed = inSpeed
-        self.left_speed = 0.0
-        self.right_speed = 0.0
+        self.left_speed = 0.1
+        self.right_speed = 0.1
 
     #Create some callback functions for single events
     def exitButtonPressed(self):
@@ -73,8 +73,10 @@ def main(baseSpeed):
             end_time = time.time()
             execution_time = end_time - start_time
             
+            driver.write()
+
             # Your robot control logic here
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
+            print(f"Left Motor: {robot.left_motor.value:.3f}, Right Motor: {robot.right_motor.value:.3f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
     
     finally:
         robot.stop()
