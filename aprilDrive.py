@@ -135,21 +135,17 @@ class drive(object):
         self.robot.left_motor.value = left_speed
         self.robot.right_motor.value = right_speed
 
-class Steering(object):
-    def __init__(self):
-        self._olddelt = 0
-        
-    def __call__(self, center:np.array, resolution:tuple):
+def steering(center:np.array, resolution:tuple):
         posx = (center[0] - (resolution[0]/2)) / resolution[0]
         rotate = round(posx, 3)
         return rotate
         
-
-def Forward(corners:np.array, ta:int):
+def forward(corners:np.array, ta:int):
     (ptA, ptB, ptC, ptD) = corners
     tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
-    vel = (tag_area - ta)/-1000
+    vel = (tag_area - ta)/-ta
     return vel
+
 
 def main(baseSpeed, stream):
     robot = Robot()
@@ -174,9 +170,6 @@ def main(baseSpeed, stream):
     detector = Detector(families='tag16h5', nthreads=3, quad_decimate=1.0, quad_sigma=0.0,\
            refine_edges=1, decode_sharpening=0.25, debug=0)
     cam = Camera(0, resolution, 30, stream)
-    
-    steering = Steering()
-    forward = Forward()
 
     try:
         while driver.running and gamepad.isConnected():
@@ -216,8 +209,15 @@ def main(baseSpeed, stream):
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
 
                 rot = steering(center, resolution)
-                fwd, fwdper = forward(corners, 1000)
-                print(f"{rot} == {fwd} / {fwdper}")
+                fwd = forward(corners, 1000)
+                print(f"{rot} == {fwd}")
+
+                if stream:
+                    cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+
+                driver.forward = fwd/2
+                driver.steering = rot/2
+                driver.write
 
             if stream: 
                 cam.stream(image)
