@@ -156,11 +156,10 @@ class Forward(object):
     def __init__(self):
         self._olddelt = 0
         
-    def __call__(self, corners:np.array, resolution:tuple):
+    def __call__(self, corners:np.array, ta:int):
         (ptA, ptB, ptC, ptD) = corners
         tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
-        cam_area = resolution[0] * resolution[1]
-        tag_view_percentage = 100 - ((cam_area - tag_area) / cam_area) * 100
+        x = (tag_area - ta)/100
         """
         posy = (center[1] - resolution[1]) / resolution[1]
         # a=0.9 == fast reaction     a=0.1 == slower reaction
@@ -171,7 +170,7 @@ class Forward(object):
         rotate = round(delt - self._olddelt, 3)
         self._olddelt = delt
         """
-        return tag_area, tag_view_percentage
+        return tag_area, x
 
 def main(baseSpeed, stream):
     robot = Robot()
@@ -238,7 +237,7 @@ def main(baseSpeed, stream):
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
 
                 rot = steering(center, resolution)
-                fwd, fwdper = forward(corners, resolution)
+                fwd, fwdper = forward(corners, 1000)
                 print(f"{rot} == {fwd} / {fwdper}")
 
             if stream: 
