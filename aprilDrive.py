@@ -141,36 +141,15 @@ class Steering(object):
         
     def __call__(self, center:np.array, resolution:tuple):
         posx = (center[0] - (resolution[0]/2)) / resolution[0]
-        # a=0.9 == fast reaction     a=0.1 == slower reaction
-        #max_change_per_itteration  = 0.4
-        #delt = max_change_per_itteration * posx + (
-        #    1 -  max_change_per_itteration) * self._olddelt
-        
-        #rotate = round(delt - self._olddelt, 3)
-        #self._olddelt = delt
         rotate = round(posx, 3)
         return rotate
         
 
-class Forward(object):
-    def __init__(self):
-        self._olddelt = 0
-        
-    def __call__(self, corners:np.array, ta:int):
-        (ptA, ptB, ptC, ptD) = corners
-        tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
-        x = (tag_area - ta)/100
-        """
-        posy = (center[1] - resolution[1]) / resolution[1]
-        # a=0.9 == fast reaction     a=0.1 == slower reaction
-        max_change_per_itteration  = 0.4
-        delt = max_change_per_itteration * posy + (
-            1 -  max_change_per_itteration) * self._olddelt
-        
-        rotate = round(delt - self._olddelt, 3)
-        self._olddelt = delt
-        """
-        return tag_area, x
+def Forward(corners:np.array, ta:int):
+    (ptA, ptB, ptC, ptD) = corners
+    tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
+    vel = (tag_area - ta)/100
+    return vel
 
 def main(baseSpeed, stream):
     robot = Robot()
