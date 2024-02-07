@@ -59,7 +59,7 @@ def drawName(img, tag, corners):
 
 
 class Camera(object):
-    def __init__(self, source:int=0, resolution:tuple=(640, 480), fps:int=(30), stream:bool=False):
+    def __init__(self, source:int=0, resolution:tuple=(1280, 720), fps:int=(30), stream:bool=False):
         # Create a GStreamer pipeline for the CSI camera
         gst_str = f'nvarguscamerasrc sensor-id={source} ! video/x-raw(memory:NVMM), width={resolution[0]}, height={resolution[1]},\
                         format=(string)NV12, framerate=(fraction){fps}/1 ! nvvidconv ! video/x-raw, \
@@ -120,8 +120,8 @@ class drive(object):
     
     def write(self):
         # Calculate left and right motor speeds based on steering and forward values
-        left_speed = self.forward + (self.steering * 0.75)
-        right_speed = self.forward - (self.steering * 0.75)
+        left_speed = self.forward + (self.steering * 0.75) #+ 0.2
+        right_speed = self.forward - (self.steering * 0.75) #+ 0.2
 
         # Scale the speeds by the overall speed scaler
         left_speed *= self.speed
@@ -134,8 +134,11 @@ class drive(object):
         # write to the motors
         self.robot.left_motor.value = left_speed
         self.robot.right_motor.value = right_speed
-        print(f"Left Motor: {left_speed:.2f}, Right Motor: {right_speed:.2f}, Speed: {self.speed:.2f}")
+        #print(f"Left Motor: {left_speed:.2f}, Right Motor: {right_speed:.2f}, Speed: {self.speed:.2f}")
         #, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
+
+def distance(p1:tuple, p2:tuple):
+    return np.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
 
 def steering(center:np.array, resolution:tuple):
         posx = (center[0] - (resolution[0]/2)) / resolution[0]
@@ -144,7 +147,7 @@ def steering(center:np.array, resolution:tuple):
         
 def forward(corners:np.array, ta:int):
     (ptA, ptB, ptC, ptD) = corners
-    cd = np.sqrt((ptC[0]-ptD[0])**2+(ptC[1]-ptD[1])**2)
+    cd = distance(ptC, ptD)
     vel = (cd - ta)/-ta
     return vel
 
@@ -172,35 +175,25 @@ def main(baseSpeed, stream):
     detector = Detector(families='tag16h5', nthreads=3, quad_decimate=1.0, quad_sigma=0.0,\
            refine_edges=1, decode_sharpening=0.25, debug=0)
     cam = Camera(0, resolution, 30, stream)
+    fps = 0
+    execution_time = 0
+    detected = False
 
     try:
         while driver.running and gamepad.isConnected():
-            """
             start_time = time.time()
-
-            #update stick positions
-            driver.forward = -gamepad.axis(joystickSpeed)
-            driver.steering = gamepad.axis(joystickSteering)
-            driver.write()
-
-            # Adjust your robot control logic based on the speed argument
-            time.sleep(pollInterval)
-            
-            end_time = time.time()
-            execution_time = end_time - start_time
-            
-            # Your robot control logic here
-            """
-
             ret, image = cam.read()
             if (ret == False): continue
             gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             tags = detector.detect(gray_img)
-            realTags = [tag for tag in tags if tag.decision_margin > 15]
+            realTags = [tag for tag in tags if (tag.decision_margin > 15) and (tag.tag_id == 0)] 
+            #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
-            #print(type(image))
             if len(realTags) > 0:
+                #print("detected")
+                detected = True
                 tag = realTags[0]
+                #print(distance(tag.corners[0], tag.corners[1]))
                 corners = tag.corners.astype(int)
                 center = tag.center.astype(int)
                 if stream:
@@ -221,11 +214,24 @@ def main(baseSpeed, stream):
             else:
                 driver.forward = 0
                 driver.steering = 0
-            driver.write()
+                #print("nothing")
+                detected = False
 
+            driver.write()
+            
             if stream: 
                 cam.stream(image)
-        
+            
+            end_time = time.time()
+            # Adjust your robot control logic based on the speed argument
+            time_taken = end_time - start_time
+            try: time.sleep(pollInterval - time_taken)
+            except: pass
+            execution_time = time_taken
+            fps = int(1/execution_time)
+
+            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+
     finally:
         robot.stop()
         gamepad.disconnect()
