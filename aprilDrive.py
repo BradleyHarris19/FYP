@@ -135,17 +135,48 @@ class drive(object):
         self.robot.left_motor.value = left_speed
         self.robot.right_motor.value = right_speed
 
-def controller(object):
-    def __init__(self, tag):
-        pass
-    def steering(self):
-        pass
-    def forward(self):
-        pass
+def steering(object):
+    def __init__(self):
+        self._olddelt = 0
+        
+    def __call__(self, center:np.array, resolution:tuple):
+        posx = (center[0] - resolution[0]) / resolution[0]
+        # a=0.9 == fast reaction     a=0.1 == slower reaction
+        max_change_per_itteration  = 0.4
+        delt = max_change_per_itteration * posx + (
+            1 -  max_change_per_itteration) * self._olddelt
+        
+        rotate = round(delt - self._olddelt, 3)
+        self._olddelt = delt
+
+        return rotate
+    
+
+def forward(object):
+    def __init__(self):
+        self._olddelt = 0
+        
+    def __call__(self, corners:np.array, resolution:tuple):
+        (ptA, ptB, ptC, ptD) = corners
+        tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
+        cam_area = resolution[0] * resolution[1]
+        tag_view_percentage = ((cam_area - tag_area) / cam_area) * 100
+        """
+        posy = (center[1] - resolution[1]) / resolution[1]
+        # a=0.9 == fast reaction     a=0.1 == slower reaction
+        max_change_per_itteration  = 0.4
+        delt = max_change_per_itteration * posy + (
+            1 -  max_change_per_itteration) * self._olddelt
+        
+        rotate = round(delt - self._olddelt, 3)
+        self._olddelt = delt
+        """
+        return tag_area, tag_view_percentage
 
 def main(baseSpeed, stream):
     robot = Robot()
     driver = drive(robot, baseSpeed)
+    resolution = (640, 480)
 
     #wait for gamepad connection
     if not Gamepad.available():
@@ -162,9 +193,9 @@ def main(baseSpeed, stream):
     gamepad.addButtonPressedHandler(speedUp, driver.speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, driver.speedDownPressed)
     
-    detector = Detector(families='tag16h5', nthreads=1, quad_decimate=1.0, quad_sigma=0.0,\
+    detector = Detector(families='tag16h5', nthreads=3, quad_decimate=1.0, quad_sigma=0.0,\
            refine_edges=1, decode_sharpening=0.25, debug=0)
-    cam = Camera(0, (640, 480), 30, stream)
+    cam = Camera(0, resolution, 30, stream)
     
     try:
         while driver.running and gamepad.isConnected():
@@ -188,8 +219,8 @@ def main(baseSpeed, stream):
 
             ret, image = cam.read()
             if (ret == False): continue
-
-            tags = detector.detect(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+            gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            tags = detector.detect(gray_img)
             realTags = [tag for tag in tags if tag.decision_margin > 15]
             #print([tag.decision_margin for tag in realTags])
             print(type(image))
@@ -201,7 +232,11 @@ def main(baseSpeed, stream):
                     image = drawCorners(image, tag)
                     image = drawCenter(image, tag)
                     image, tagfamily = drawName(image, tag, corners)
-                print(f"Tag position  X: {center[0]}, Y: {center[1]}")
+                #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
+
+                rot = steering(center, resolution)
+                fwd, fwdper = forward(corners, resolution)
+                print(f"{rot} == {fwd} / {fwdper}")
 
             if stream: 
                 cam.stream(image)
