@@ -148,7 +148,7 @@ class Steering(object):
 def Forward(corners:np.array, ta:int):
     (ptA, ptB, ptC, ptD) = corners
     tag_area = 0.5 * abs(ptA[0]*ptB[1] + ptB[0]*ptC[1] + ptC[0]*ptD[1] + ptD[0]*ptA[1] - ptB[0]*ptA[1] - ptC[0]*ptB[1] - ptD[0]*ptC[1] - ptA[0]*ptD[1])
-    vel = (tag_area - ta)/100
+    vel = (tag_area - ta)/-1000
     return vel
 
 def main(baseSpeed, stream):
