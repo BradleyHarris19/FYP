@@ -27,13 +27,13 @@ class Drive(object):
         left_speed = self.forward + (self.steering * 0.75) #+ 0.2
         right_speed = self.forward - (self.steering * 0.75) #+ 0.2
 
-        # Scale the speeds by the overall speed scaler
-        left_speed *= self.speed
-        right_speed *= self.speed
-
         # Ensure motor speeds stay between 0 and 1
         left_speed = max(-1, min(1, left_speed))
         right_speed = max(-1, min(1, right_speed))
+        
+        # Scale the speeds by the overall speed scaler
+        left_speed *= self.speed
+        right_speed *= self.speed
 
         # write to the motors
         self.robot.left_motor.value = left_speed

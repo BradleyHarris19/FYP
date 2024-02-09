@@ -34,14 +34,8 @@ class Steering:
         # Update previous error for the next iteration
         self.prev_error = error
 
-        return output
+        return -output
         
-def forward(corners:np.array, ta:int):
-    (ptA, ptB, ptC, ptD) = corners
-    cd = distance(ptC, ptD)
-    vel = (cd - ta)/-ta
-    return vel
-
 class Velocity:
     def __init__(self, kp:float, ki:float, kd:float, setpoint:int):
         self.kp = kp #
@@ -71,10 +65,10 @@ class Velocity:
 def main(baseSpeed, stream, p, i, d):
     robot = Robot()
     driver = Drive(robot, baseSpeed)
-    resolution = (640, 480)
+    resolution = (480, 360)
     
-    detector = Detector(families='tag16h5', nthreads=3, quad_decimate=1.0, quad_sigma=0.0,\
-           refine_edges=1, decode_sharpening=0.25, debug=0)
+    detector = Detector(families='tag16h5', nthreads=4, quad_decimate=1.0, quad_sigma=0.0,\
+                        refine_edges=1, decode_sharpening=0.0, debug=0)
     cam = Camera(0, resolution, 30, stream)
     execution_time = 0
     detected = False
@@ -93,7 +87,7 @@ def main(baseSpeed, stream, p, i, d):
             #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
             if len(realTags) > 0:
-                #print("detected")
+                print("detected")
                 detected = True
                 tag = realTags[0]
                 #print(distance(tag.corners[0], tag.corners[1]))
@@ -107,6 +101,7 @@ def main(baseSpeed, stream, p, i, d):
                 
                 #fwd = forward(distance(tag.corners[2], tag.corners[3]))
                 rot = steering(center[0])
+                #print(f"Rotation: {rot:.2f}")
                 #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
                 #if stream:
@@ -117,10 +112,10 @@ def main(baseSpeed, stream, p, i, d):
             else:
                 driver.forward = 0
                 driver.steering = 0
-                #print("nothing")
+                print("--- nothing ---")
                 detected = False
 
-            #driver.write()
+            driver.write()
             
             if stream: 
                 cam.stream(image)
@@ -133,7 +128,7 @@ def main(baseSpeed, stream, p, i, d):
             execution_time = time_taken
             fps = int(1/execution_time)
 
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+            #print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
 
     finally:
         robot.stop()
