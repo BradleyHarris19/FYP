@@ -3,7 +3,7 @@ import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
 
-class drive(object):
+class Drive(object):
     def __init__(self, robot, inSpeed):
         self.robot = robot
         self.running = True
@@ -44,7 +44,7 @@ class drive(object):
 
 def main(baseSpeed):
     robot = Robot()
-    driver = drive(robot, baseSpeed)
+    driver = Drive(robot, baseSpeed)
 
     # Gamepad settings
     gamepadType = Gamepad.PG9099
