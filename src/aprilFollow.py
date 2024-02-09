@@ -68,7 +68,7 @@ class Velocity:
 
         return output
 
-def main(baseSpeed, stream):
+def main(baseSpeed, stream, p, i, d):
     robot = Robot()
     driver = Drive(robot, baseSpeed)
     resolution = (640, 480)
@@ -79,7 +79,7 @@ def main(baseSpeed, stream):
     execution_time = 0
     detected = False
 
-    steering = Steering(2, 0, 0, resolution[0]/2)
+    steering = Steering(p, i, d, resolution[0]/2)
     forward = Velocity(2, 0, 0, 50)
 
     try:
@@ -142,5 +142,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
+    parser.add_argument("--P", type=float, default=2, help="Potential tuning")
+    parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
+    parser.add_argument("--D", type=float, default=0, help="Differential tuning")
     args = parser.parse_args()
-    main(args.speed, args.stream)
+    main(args.speed, args.stream, args.P, args.I, args.D)
