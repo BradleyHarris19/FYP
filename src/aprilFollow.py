@@ -71,7 +71,7 @@ def main(baseSpeed, stream):
                 #print("nothing")
                 detected = False
 
-            driver.write()
+            #driver.write()
             
             if stream: 
                 cam.stream(image)
