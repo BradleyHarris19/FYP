@@ -6,9 +6,11 @@ import subprocess
 def capture_and_save_image(file_name, width=640, height=480):
     # Open a connection to the default camera (usually 0)
     video_source=0
-    gst_str = f'nvarguscamerasrc sensor-id={video_source} ! video/x-raw(memory:NVMM), width={width}, height={height},\
-                format=(string)NV12, framerate=(fraction)10/1 ! nvvidconv ! video/x-raw, \
-                format=(string)GRAY8 ! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+    gst_str = f'nvarguscamerasrc sensor-id={video_source} silent=True wbmode=1 !\
+                video/x-raw(memory:NVMM), width={width}, height={height}, format=(string)NV12, framerate=(fraction)10/1 !\
+                nvvidconv ! video/x-raw, format=(string)GRAY8 !\
+                videoconvert ! video/x-raw, format=(string)BGR !\
+                videobalance brightness=1.0 contrast=1.0 saturation=1.0 ! appsink'
     cap = cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
     
     # Check if the camera opened successfully
@@ -38,7 +40,7 @@ def capture_and_save_image(file_name, width=640, height=480):
     except subprocess.CalledProcessError as e:
         print(f"Error transferring file via SCP: {e}")
 
-num = 2
+num = "_fov_balance"
 # Specify the file name to save the image
 file_name = f"captured_img/captured_image{num}.jpg"
 
