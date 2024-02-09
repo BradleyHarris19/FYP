@@ -10,11 +10,31 @@ import cv2
 
 POLLINTERVAL = 0.01
 
+class Steering:
+    def __init__(self, kp:float, ki:float, kd:float, setpoint:int):
+        self.kp = kp #
+        self.ki = ki
+        self.kd = kd
+        self.setpoint = setpoint
+        self.prev_error = 0
+        self.integral = 0
 
-def steering(center:np.array, resolution:tuple):
-        posx = (center[0] - (resolution[0]/2)) / resolution[0]
-        rotate = round(posx, 3)
-        return rotate
+    def __call__(self, current_value:int):
+        error = self.setpoint - current_value
+        # Proportional term -- The difference between set point and current value
+        p_term = self.kp * error
+        # Integral term -- error over time, if error does not close it increases
+        self.integral += error
+        i_term = self.ki * self.integral
+        # Derivative term -- tames the compounding nature of the other variables if increse is rapid
+        d_term = self.kd * (error - self.prev_error)
+        # PID control output
+        output = p_term + i_term + d_term
+
+        # Update previous error for the next iteration
+        self.prev_error = error
+
+        return output
         
 def forward(corners:np.array, ta:int):
     (ptA, ptB, ptC, ptD) = corners
@@ -22,7 +42,33 @@ def forward(corners:np.array, ta:int):
     vel = (cd - ta)/-ta
     return vel
 
-def main(baseSpeed, stream):
+class Velocity:
+    def __init__(self, kp:float, ki:float, kd:float, setpoint:int):
+        self.kp = kp #
+        self.ki = ki
+        self.kd = kd
+        self.setpoint = setpoint
+        self.prev_error = 0
+        self.integral = 0
+
+    def __call__(self, current_value:int):
+        error = self.setpoint - current_value
+        # Proportional term -- The difference between set point and current value
+        p_term = self.kp * error
+        # Integral term -- error over time, if error does not close it increases
+        self.integral += error
+        i_term = self.ki * self.integral
+        # Derivative term -- tames the compounding nature of the other variables if increse is rapid
+        d_term = self.kd * (error - self.prev_error)
+        # PID control output
+        output = p_term + i_term + d_term
+
+        # Update previous error for the next iteration
+        self.prev_error = error
+
+        return output
+
+def main(baseSpeed, stream, p, i, d):
     robot = Robot()
     driver = Drive(robot, baseSpeed)
     resolution = (640, 480)
@@ -32,6 +78,9 @@ def main(baseSpeed, stream):
     cam = Camera(0, resolution, 30, stream)
     execution_time = 0
     detected = False
+
+    steering = Steering(p, i, d, resolution[0]/2)
+    forward = Velocity(2, 0, 0, 50)
 
     try:
         while driver.running:
@@ -55,15 +104,15 @@ def main(baseSpeed, stream):
                     image = drawCenter(image, tag)
                     image, tagfamily = drawName(image, tag, corners)
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
-
-                rot = steering(center, resolution)
-                fwd = forward(corners, 50)
+                
+                #fwd = forward(distance(tag.corners[2], tag.corners[3]))
+                rot = steering(center[0])
                 #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
-                if stream:
-                    cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+                #if stream:
+                    #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
                 
-                driver.forward = fwd
+                #driver.forward = fwd
                 driver.steering = rot
             else:
                 driver.forward = 0
@@ -93,5 +142,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
+    parser.add_argument("--P", type=float, default=2, help="Potential tuning")
+    parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
+    parser.add_argument("--D", type=float, default=0, help="Differential tuning")
     args = parser.parse_args()
-    main(args.speed, args.stream)
+    main(args.speed, args.stream, args.P, args.I, args.D)
