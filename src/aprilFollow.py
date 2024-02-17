@@ -68,7 +68,7 @@ def main(baseSpeed, stream, p, i, d):
     resolution = (480, 360)
     
     detector = Detector(families='tag16h5', nthreads=4, quad_decimate=1.0, quad_sigma=0.0,\
-                        refine_edges=1, decode_sharpening=0.0, debug=0)
+                        refine_edges=1, decode_sharpening=0.25, debug=0)
     cam = Camera(0, resolution, 30, stream)
     execution_time = 0
     detected = False
@@ -81,11 +81,13 @@ def main(baseSpeed, stream, p, i, d):
             start_time = time.time()
             ret, image = cam.read()
             if (ret == False): continue
+            
             gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            tags = detector.detect(gray_img)
-            realTags = [tag for tag in tags if (tag.decision_margin > 15) and (tag.tag_id == 0)] 
+            tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
+            realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == 0)] 
             #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
+            
             if len(realTags) > 0:
                 print("detected")
                 detected = True
