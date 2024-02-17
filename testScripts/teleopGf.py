@@ -2,8 +2,7 @@ import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
-import socket
-import json
+from flask import Flask, jsonify
 
 # Gamepad settings
 gamepadType = Gamepad.PG9099
@@ -22,18 +21,19 @@ class drive(object):
         self.forward = 0.0
         self.steering = 0.0
 
-    #Create some callback functions for single events
+    # Create some callback functions for single events
     def exitButtonPressed(self):
         print('EXIT')
         self.running = False
+
     def speedUpPressed(self):
-        self.speed = min(1.0, self.speed + 0.1)# Increase speed by 0.1,but ensure it doesn't go above 1
+        self.speed = min(1.0, self.speed + 0.1)  # Increase speed by 0.1, but ensure it doesn't go above 1
         print(f"Speed: {self.speed}")
+
     def speedDownPressed(self):
         self.speed = max(0, self.speed - 0.1)  # Decrease speed by 0.1, but ensure it doesn't go below 0
         print(f"Speed: {self.speed}")
-    
-    
+
     def write(self):
         # Calculate left and right motor speeds based on steering and forward values
         left_speed = self.forward + (self.steering * 0.75)
@@ -51,28 +51,10 @@ class drive(object):
         self.robot.left_motor.value = left_speed
         self.robot.right_motor.value = right_speed
 
-class Server:
-    def __init__(self, port):
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('0.0.0.0', port))
-        self.server_socket.listen(10)
-        print("Server is listening...")
-        self.client_socket, self.client_address = self.server_socket.accept()
-        print(f"Connection from {self.client_address} accepted")
-
-    def send_data(self, data:dict):
-        json_data = json.dumps(data)
-        self.client_socket.send(json_data.encode('utf-8'))
-
-    def close_connection(self):
-        self.client_socket.close()
-
-
 def main(baseSpeed):
     robot = Robot()
     driver = drive(robot, baseSpeed)
-    direction_socket = Server(5002)
-    #wait for gamepad connection
+    # wait for gamepad connection
     if not Gamepad.available():
         print('Please connect your gamepad...')
         while not Gamepad.available():
@@ -86,29 +68,43 @@ def main(baseSpeed):
     gamepad.addButtonPressedHandler(buttonExit, driver.exitButtonPressed)
     gamepad.addButtonPressedHandler(speedUp, driver.speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, driver.speedDownPressed)
-    
+
+    # Create a Flask app
+    app = Flask(__name__)
+
+    @app.route('/drive', methods=['GET'])
+    def grafana_drive_data():
+        data = {
+            "leftValue": robot.left_motor.value,
+            "rightValue": robot.right_motor.value,
+            "speed": driver.speed,
+            "time": time.time()
+        }
+        return jsonify(data)
+
+    # Run the Flask app in a separate thread
+    app.run(host='0.0.0.0', port=5000, threaded=True)
+
     try:
         while driver.running and gamepad.isConnected():
             start_time = time.time()
 
-            #update stick positions
+            # update stick positions
             driver.forward = -gamepad.axis(joystickSpeed)
             driver.steering = gamepad.axis(joystickSteering)
             driver.write()
-            data = {"leftValue":robot.left_motor.value, "rightValue":robot.right_motor.value}
-            direction_socket.send_data(data)
 
             # Adjust your robot control logic based on the speed argument
             time.sleep(pollInterval)
-            
+
             end_time = time.time()
             execution_time = end_time - start_time
-            
+
             # Your robot control logic here
             print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
-    
+            
+
     finally:
-        direction_socket.close_connection()
         robot.stop()
         gamepad.disconnect()
 
@@ -118,4 +114,3 @@ if __name__ == "__main__":
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
     args = parser.parse_args()
     main(args.speed)
-
