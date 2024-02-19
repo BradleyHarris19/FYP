@@ -1,4 +1,3 @@
-#!/bin/python3.6
 
 from Gamepad import Gamepad
 import time
@@ -98,3 +97,4 @@ if __name__ == "__main__":
     parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
     args = parser.parse_args()
     main(args.speed)
+
