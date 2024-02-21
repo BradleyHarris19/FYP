@@ -23,7 +23,7 @@ def main(baseSpeed, stream, p, i, d):
 
     angle_last = 0.0
     slice_height = 10
-    threash = 55
+    threash = 65
     view_distance = 70 #distance between camera and slice
     kp = p
     kd = d
@@ -33,7 +33,7 @@ def main(baseSpeed, stream, p, i, d):
             start_time = time.time()
             ret, image = cam.read()
             if (ret == False): continue
-            
+
             # Get x bottom rows of the image
             height, width, _ = image.shape
             bottom_rows = image[height - slice_height:, :]
@@ -44,9 +44,9 @@ def main(baseSpeed, stream, p, i, d):
             grey_bottom_row = np.mean(grey_bottom_rows, 0, keepdims=True).astype(np.uint8)
 
 
-            #thresh_grey_bottom_row = cv2.adaptiveThreshold(grey_bottom_row, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 5) 
-            #_, thresh_grey_bottom_row = cv2.threshold(grey_bottom_row, threash, 255, cv2.THRESH_BINARY_INV)
-            
+            thresh_grey_bottom_row = cv2.adaptiveThreshold(grey_bottom_row, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 5) 
+            _, thresh_grey_bottom_row = cv2.threshold(grey_bottom_row, threash, 255, cv2.THRESH_BINARY_INV)
+            '''
             # Upload the image to the GPU
             in_image.upload(grey_bottom_row)
             # Create a CUDA thresholding operation
@@ -55,7 +55,7 @@ def main(baseSpeed, stream, p, i, d):
             threshold.apply(in_image, out_image)
             # Download the thresholded image from the GPU
             thresh_grey_bottom_row = out_image.download()
-
+            '''
             # pick out x coord of line
             positions = np.where(thresh_grey_bottom_row == 255)
             line_center = np.mean(positions[1]).astype(int)
@@ -74,9 +74,11 @@ def main(baseSpeed, stream, p, i, d):
             driver.write()
 
             if stream:
-                buffer = np.ones((10, bottom_rows.shape[1], 3), dtype=np.uint8) * 255
-                cv2.line(thresh_grey_bottom_row, (line_center, 0), (line_center, height), (0, 255, 0), 1)
-                result = np.concatenate((bottom_rows, buffer, thresh_grey_bottom_row), axis=0)
+                space = np.ones((10, bottom_rows.shape[1], 3), dtype=np.uint8) * 255
+                thresh_grey_bottom_row = np.tile(thresh_grey_bottom_row, (10, 1))
+                thresh_grey_bottom_row = cv2.cvtColor(thresh_grey_bottom_row, cv2.COLOR_GRAY2RGB)
+                cv2.line(thresh_grey_bottom_row, (line_center, 0), (line_center, height), (0, 255, 0), 3)
+                result = np.concatenate((bottom_rows, space, thresh_grey_bottom_row), axis=0)
                 cam.stream(result)
             
             end_time = time.time()
@@ -94,7 +96,7 @@ def main(baseSpeed, stream, p, i, d):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
-    parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
+    parser.add_argument("--speed", type=float, default=0.4, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
     parser.add_argument("--P", type=float, default=0.2, help="Potential tuning")
     parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
