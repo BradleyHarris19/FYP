@@ -23,7 +23,7 @@ def main(baseSpeed, stream, p, i, d):
 
     angle_last = 0.0
     slice_height = 10
-    threash = 65
+    thresh = 65.0
     view_distance = 70 #distance between camera and slice
     kp = p
     kd = d
@@ -44,18 +44,11 @@ def main(baseSpeed, stream, p, i, d):
             grey_bottom_row = np.mean(grey_bottom_rows, 0, keepdims=True).astype(np.uint8)
 
 
-            thresh_grey_bottom_row = cv2.adaptiveThreshold(grey_bottom_row, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 5) 
-            _, thresh_grey_bottom_row = cv2.threshold(grey_bottom_row, threash, 255, cv2.THRESH_BINARY_INV)
-            '''
-            # Upload the image to the GPU
-            in_image.upload(grey_bottom_row)
-            # Create a CUDA thresholding operation
-            threshold = cv2.cuda.createThresh_CV(threash.value, 255, cv2.cuda.THRESH_BINARY_INV)
-            # Apply thresholding on the GPU
-            threshold.apply(in_image, out_image)
-            # Download the thresholded image from the GPU
-            thresh_grey_bottom_row = out_image.download()
-            '''
+            #thresh_grey_bottom_row = cv2.adaptiveThreshold(grey_bottom_row, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 5) 
+            _, thresh_grey_bottom_row = cv2.threshold(grey_bottom_row, thresh, 255, cv2.THRESH_BINARY_INV)
+            #thresh_grey_bottom_row = np.zeros_like(grey_bottom_row)
+            #cv2.cuda.threshold(grey_bottom_row, thresh_grey_bottom_row, thresh, 255, cv2.THRESH_BINARY_INV)
+            
             # pick out x coord of line
             positions = np.where(thresh_grey_bottom_row == 255)
             line_center = np.mean(positions[1]).astype(int)
