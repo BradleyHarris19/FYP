@@ -90,8 +90,8 @@ def main(baseSpeed, stream, p, i, d):
     execution_time = 0
     detected = False
 
-    steering = Steering(p, i, d, resolution[0]/2)
-    forward = Velocity(2, 0, 0, 50)
+    steering = Steering(0.0018, 0.00005, 0.005, resolution[0]/2)
+    forward = Velocity(p, i, d, 50)
 
     try:
         while driver.running:
@@ -118,16 +118,16 @@ def main(baseSpeed, stream, p, i, d):
                     image, tagfamily = drawName(image, tag, corners)
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
                 
-                #fwd = forward(distance(tag.corners[2], tag.corners[3]))
-                rot = steering(center[0])
+                fwd = forward(distance(tag.corners[2], tag.corners[3]))
+                #rot = steering(center[0])
                 #print(f"Rotation: {rot:.2f}")
                 #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
                 #if stream:
                     #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
                 
-                #driver.forward = fwd
-                driver.steering = rot
+                driver.forward = fwd
+                #driver.steering = rot
             else:
                 driver.forward = 0
                 driver.steering = 0
