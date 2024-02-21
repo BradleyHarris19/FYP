@@ -49,9 +49,9 @@ class Velocity:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
-        publish.single("jetbot1/steering/pid/P", kp, hostname=mqttBroker)
-        publish.single("jetbot1/steering/pid/I", ki, hostname=mqttBroker)
-        publish.single("jetbot1/steering/pid/D", kd, hostname=mqttBroker)
+        publish.single("jetbot1/velocity/pid/P", kp, hostname=mqttBroker)
+        publish.single("jetbot1/velocity/pid/I", ki, hostname=mqttBroker)
+        publish.single("jetbot1/velocity/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
