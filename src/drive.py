@@ -2,6 +2,9 @@ from Gamepad import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
+import paho.mqtt.publish as publish
+
+mqttBroker = "10.0.0.1"
 
 class Drive(object):
     def __init__(self, robot, inSpeed):
@@ -34,6 +37,10 @@ class Drive(object):
         # Scale the speeds by the overall speed scaler
         left_speed *= self.speed
         right_speed *= self.speed
+
+        publish.single("jetbot1/drive/L", left_speed, hostname=mqttBroker)
+        publish.single("jetbot1/drive/R", right_speed, hostname=mqttBroker)
+        publish.single("jetbot1/drive/S", self.speed, hostname=mqttBroker)
 
         # write to the motors
         self.robot.left_motor.value = left_speed

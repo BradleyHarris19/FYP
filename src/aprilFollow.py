@@ -7,7 +7,9 @@ import numpy as np
 import time
 import argparse
 import cv2
+import paho.mqtt.publish as publish
 
+mqttBroker = "10.0.0.1"
 POLLINTERVAL = 0.01
 
 class Steering:
@@ -23,11 +25,14 @@ class Steering:
         error = self.setpoint - current_value
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
+        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
+        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
+        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
 
@@ -49,14 +54,16 @@ class Velocity:
         error = self.setpoint - current_value
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
+        publish.single("jetbot1/velocity/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
+        publish.single("jetbot1/velocity/pid/I_term", i_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
+        publish.single("jetbot1/velocity/pid/D_term", d_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
-
         # Update previous error for the next iteration
         self.prev_error = error
 

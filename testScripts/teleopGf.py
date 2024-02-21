@@ -83,7 +83,7 @@ def main(baseSpeed):
         return jsonify(data)
 
     # Run the Flask app in a separate thread
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5001, threaded=True)
 
     try:
         while driver.running and gamepad.isConnected():
