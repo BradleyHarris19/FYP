@@ -17,6 +17,9 @@ class Steering:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
+        publish.single("jetbot1/steering/pid/P", kp, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/I", ki, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
@@ -29,10 +32,10 @@ class Steering:
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
-        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/I_term", p_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
-        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/D_term", p_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
 
@@ -46,6 +49,9 @@ class Velocity:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
+        publish.single("jetbot1/steering/pid/P", kp, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/I", ki, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0

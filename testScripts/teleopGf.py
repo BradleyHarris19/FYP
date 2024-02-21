@@ -2,7 +2,6 @@ import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
-from flask import Flask, jsonify
 
 # Gamepad settings
 gamepadType = Gamepad.PG9099
@@ -68,22 +67,6 @@ def main(baseSpeed):
     gamepad.addButtonPressedHandler(buttonExit, driver.exitButtonPressed)
     gamepad.addButtonPressedHandler(speedUp, driver.speedUpPressed)
     gamepad.addButtonPressedHandler(speedDown, driver.speedDownPressed)
-
-    # Create a Flask app
-    app = Flask(__name__)
-
-    @app.route('/drive', methods=['GET'])
-    def grafana_drive_data():
-        data = {
-            "leftValue": robot.left_motor.value,
-            "rightValue": robot.right_motor.value,
-            "speed": driver.speed,
-            "time": time.time()
-        }
-        return jsonify(data)
-
-    # Run the Flask app in a separate thread
-    app.run(host='0.0.0.0', port=5001, threaded=True)
 
     try:
         while driver.running and gamepad.isConnected():
