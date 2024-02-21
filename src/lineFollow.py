@@ -21,6 +21,7 @@ def main(baseSpeed, stream, p, i, d):
     in_image = cv2.cuda_GpuMat()
     out_image = cv2.cuda_GpuMat()
 
+    angle_last = 0.0
     slice_height = 10
     threash = 55
     view_distance = 70 #distance between camera and slice
