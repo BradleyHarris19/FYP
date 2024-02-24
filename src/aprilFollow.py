@@ -29,18 +29,14 @@ class Steering:
         publish.single("jetbot1/steering/pid/error", error, hostname=mqttBroker)
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
+        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
-<<<<<<< Updated upstream
-        # Derivative term -- tames the compounding nature of the other variables if increse is rapid
-        d_term = self.kd * (error - self.prev_error)
-=======
         publish.single("jetbot1/steering/pid/I_term", i_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
         publish.single("jetbot1/steering/pid/D_term", d_term, hostname=mqttBroker)
->>>>>>> Stashed changes
         # PID control output
         output = p_term + i_term + d_term
         publish.single("jetbot1/steering/pid/out", -output, hostname=mqttBroker)
@@ -87,13 +83,8 @@ def main(baseSpeed, stream, p, i, d):
     execution_time = 0
     detected = False
 
-<<<<<<< Updated upstream
-    steering = Steering(p, i, d, resolution[0]/2)
-    forward = Velocity(2, 0, 0, 50)
-=======
-    steering = Steering(p, i, d, 0)
+    steering = Steering(0.25, 0.01, 0.01, 0)
     forward = Velocity(p, i, d, 50)
->>>>>>> Stashed changes
 
     try:
         while driver.running:
@@ -121,24 +112,18 @@ def main(baseSpeed, stream, p, i, d):
                 #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
                 
                 #fwd = forward(distance(tag.corners[2], tag.corners[3]))
-<<<<<<< Updated upstream
-                rot = steering(center[0])
-=======
                 #print(float(center[0]) / float(resolution[0]))
+                
                 hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 rot = steering(hor_pos)
->>>>>>> Stashed changes
+                
                 #print(f"Rotation: {rot:.2f}")
                 #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
                 #if stream:
                     #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
                 
-<<<<<<< Updated upstream
-                #driver.forward = fwd
-=======
                 driver.forward = 0.2
->>>>>>> Stashed changes
                 driver.steering = rot
             else:
                 steering.reset()
@@ -167,10 +152,10 @@ def main(baseSpeed, stream, p, i, d):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
-    parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
+    parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
-    parser.add_argument("--P", type=float, default=2, help="Potential tuning")
-    parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
-    parser.add_argument("--D", type=float, default=0, help="Differential tuning")
+    parser.add_argument("--P", type=float, default=0.1, help="Potential tuning")
+    parser.add_argument("--I", type=float, default=0.0025, help="Intergral tuning")
+    parser.add_argument("--D", type=float, default=0.2, help="Differential tuning")
     args = parser.parse_args()
     main(args.speed, args.stream, args.P, args.I, args.D)
