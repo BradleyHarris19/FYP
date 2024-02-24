@@ -7,7 +7,9 @@ import numpy as np
 import time
 import argparse
 import cv2
+import paho.mqtt.publish as publish
 
+mqttBroker = "10.0.0.1"
 POLLINTERVAL = 0.01
 
 class Steering:
@@ -15,6 +17,9 @@ class Steering:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
+        publish.single("jetbot1/steering/pid/P", kp, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/I", ki, hostname=mqttBroker)
+        publish.single("jetbot1/steering/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
@@ -25,6 +30,7 @@ class Steering:
 
     def __call__(self, current_value:float):
         publish.single("jetbot1/steering/pid/in", current_value, hostname=mqttBroker)
+        
         error = self.setpoint - current_value
         publish.single("jetbot1/steering/pid/error", error, hostname=mqttBroker)
         # Proportional term -- The difference between set point and current value
@@ -37,6 +43,7 @@ class Steering:
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
         publish.single("jetbot1/steering/pid/D_term", d_term, hostname=mqttBroker)
+        
         # PID control output
         output = p_term + i_term + d_term
         publish.single("jetbot1/steering/pid/out", -output, hostname=mqttBroker)
@@ -51,6 +58,9 @@ class Velocity:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
+        publish.single("jetbot1/velocity/pid/P", kp, hostname=mqttBroker)
+        publish.single("jetbot1/velocity/pid/I", ki, hostname=mqttBroker)
+        publish.single("jetbot1/velocity/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
@@ -59,14 +69,16 @@ class Velocity:
         error = self.setpoint - current_value
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
+        publish.single("jetbot1/velocity/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
+        publish.single("jetbot1/velocity/pid/I_term", i_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
+        publish.single("jetbot1/velocity/pid/D_term", d_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
-
         # Update previous error for the next iteration
         self.prev_error = error
 
@@ -76,6 +88,10 @@ def main(baseSpeed, stream, p, i, d):
     robot = Robot()
     driver = Drive(robot, baseSpeed)
     resolution = (480, 360)
+
+    camera_calibration = np.load("calibration/calibration.npy")
+    mtx, dist, rvecs, tvecs = camera_calibration
+    fx, fy, cx, cy = mtx[0, 0], mtx[1, 1], mtx[0, 2], mtx[1, 2]
     
     detector = Detector(families='tag16h5', nthreads=4, quad_decimate=1.0, quad_sigma=0.0,\
                         refine_edges=1, decode_sharpening=0.25, debug=0)
@@ -125,6 +141,7 @@ def main(baseSpeed, stream, p, i, d):
                 
                 driver.forward = 0.2
                 driver.steering = rot
+
             else:
                 steering.reset()
                 driver.forward = 0

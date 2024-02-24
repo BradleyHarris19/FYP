@@ -22,9 +22,10 @@ def startSocket():
 class Camera(object):
     def __init__(self, source:int=0, resolution:tuple=(1280, 720), fps:int=(30), stream:bool=False):
         # Create a GStreamer pipeline for the CSI camera
-        gst_str = f'nvarguscamerasrc sensor-id={source} ! video/x-raw(memory:NVMM), width={resolution[0]}, height={resolution[1]},\
-                        format=(string)NV12, framerate=(fraction){fps}/1 ! nvvidconv ! video/x-raw, \
-                        format=(string)BGRx! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+        gst_str = f'nvarguscamerasrc sensor-id={source} ! \
+                    video/x-raw(memory:NVMM), width={resolution[0]}, height={resolution[1]},\
+                    format=(string)NV12, framerate=(fraction){fps}/1 ! nvvidconv ! video/x-raw, \
+                    format=(string)BGRx! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
         self.capture = cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
         camera_calibration = np.load("calibration/calibration.npy")
         self.mtx, self.dist, _, _ = camera_calibration 
