@@ -23,7 +23,7 @@ def main(baseSpeed, stream, p, i, d):
 
     angle_last = 0.0
     slice_height = 10
-    thresh = 65.0
+    thresh = 65
     view_distance = 70 #distance between camera and slice
     kp = p
     kd = d
@@ -62,7 +62,7 @@ def main(baseSpeed, stream, p, i, d):
             rot = angle * kp + (angle - angle_last) * kd
             angle_last = angle
 
-            driver.forward = baseSpeed
+            driver.forward = 0.2
             driver.steering = rot
             driver.write()
 
@@ -82,17 +82,18 @@ def main(baseSpeed, stream, p, i, d):
             execution_time = time_taken
             fps = int(1/execution_time)
 
-            #print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS")
 
     finally:
         robot.stop()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
-    parser.add_argument("--speed", type=float, default=0.4, help="Robot speed factor")
+    parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
-    parser.add_argument("--P", type=float, default=0.2, help="Potential tuning")
+    parser.add_argument("--P", type=float, default=0.085, help="Potential tuning")
     parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
-    parser.add_argument("--D", type=float, default=0.25, help="Differential tuning")
+    parser.add_argument("--D", type=float, default=0.12, help="Differential tuning")
+    
     args = parser.parse_args()
     main(args.speed, args.stream, args.P, args.I, args.D)
