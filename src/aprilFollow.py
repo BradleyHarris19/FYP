@@ -98,8 +98,11 @@ def main(baseSpeed, stream, p, i, d):
     cam = Camera(0, resolution, 30, stream)
     execution_time = 0
     detected = False
-
-    steering = Steering(0.25, 0.01, 0.01, 0)
+    
+    # 0.25, 0.01, 0.01
+    # 0.1, 0.0025, 0.2
+    # 0.08. 0.015, 0.2
+    steering = Steering(0.08, 0.005, 0.2, 0)
     forward = Velocity(p, i, d, 50)
 
     try:
@@ -110,7 +113,7 @@ def main(baseSpeed, stream, p, i, d):
             
             gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
-            realTags = [tag for tag in tags if (tag.decision_margin > 2) and (tag.tag_id == 0)] 
+            realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == 0)] 
             #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
             

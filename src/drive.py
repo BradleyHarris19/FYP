@@ -33,7 +33,7 @@ class Drive(object):
             left_speed = self.forward + (self.steering * 1.0) #+ 0.2
         if (self.steering < 0):
             right_speed = self.forward - (self.steering * 1.0) #+ 0.2
-        
+
         # Ensure motor speeds stay between 0 and 1
         left_speed = max(-1, min(1, left_speed))
         right_speed = max(-1, min(1, right_speed))

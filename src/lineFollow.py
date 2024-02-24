@@ -6,7 +6,9 @@ import numpy as np
 import time
 import argparse
 import cv2
+import paho.mqtt.publish as publish
 
+mqttBroker = "10.0.0.1"
 POLLINTERVAL = 0.01
 
 def main(baseSpeed, stream, p, i, d):
@@ -24,9 +26,11 @@ def main(baseSpeed, stream, p, i, d):
     angle_last = 0.0
     slice_height = 10
     thresh = 65
-    view_distance = 70 #distance between camera and slice
+    view_distance = 130 #distance between camera and slice
     kp = p
+    ki = i
     kd = d
+    integral =0
 
     try:
         while driver.running:
@@ -59,7 +63,23 @@ def main(baseSpeed, stream, p, i, d):
                 angle = np.arctan2(line_drift, view_distance)
 
             # calculate steering using pd controller
-            rot = angle * kp + (angle - angle_last) * kd
+            publish.single("jetbot1/steering/pid/error", angle, hostname=mqttBroker)
+            # Proportional term -- The difference between set point and current value
+            p_term = kp * angle
+            publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
+            # Integral term -- error over time, if error does not close it increases
+            integral += angle
+            i_term = ki * integral
+            publish.single("jetbot1/steering/pid/I_term", i_term, hostname=mqttBroker)
+            # Derivative term -- tames the compounding nature of the other variables if increse is rapid
+            d_term = kd * (angle - angle_last)
+            publish.single("jetbot1/steering/pid/D_term", d_term, hostname=mqttBroker)
+    
+            # PID control output
+            rot = p_term + i_term + d_term
+            publish.single("jetbot1/steering/pid/out", rot, hostname=mqttBroker)
+
+            #rot = angle * kp + (angle - angle_last) * kd
             angle_last = angle
 
             driver.forward = 0.2
@@ -91,6 +111,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
     parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
+    # 0.025 0 0.25
     parser.add_argument("--P", type=float, default=0.085, help="Potential tuning")
     parser.add_argument("--I", type=float, default=0, help="Intergral tuning")
     parser.add_argument("--D", type=float, default=0.12, help="Differential tuning")
