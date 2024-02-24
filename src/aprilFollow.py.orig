@@ -113,8 +113,11 @@ def main(baseSpeed, tagid, stream, p, i, d):
             
             gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
-            realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == tagid)] 
-            
+<<<<<<< HEAD
+            realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == 0)] 
+=======
+            realTags = [tag for tag in tags if (tag.decision_margin > 2) and (tag.tag_id == tagid)] 
+>>>>>>> d80fc51111db62b308d8c45618f942696225e902
             #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
             
