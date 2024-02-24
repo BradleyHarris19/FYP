@@ -84,7 +84,7 @@ class Velocity:
 
         return output
 
-def main(baseSpeed, stream, p, i, d):
+def main(baseSpeed, tagid, stream, p, i, d):
     robot = Robot()
     driver = Drive(robot, baseSpeed)
     resolution = (480, 360)
@@ -110,7 +110,7 @@ def main(baseSpeed, stream, p, i, d):
             
             gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
-            realTags = [tag for tag in tags if (tag.decision_margin > 2) and (tag.tag_id == 0)] 
+            realTags = [tag for tag in tags if (tag.decision_margin > 2) and (tag.tag_id == tagid)] 
             #(distance(tag.corners[0], tag.corners[1]) > 15)]
             #print([tag.decision_margin for tag in realTags])
             
@@ -170,9 +170,10 @@ def main(baseSpeed, stream, p, i, d):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
     parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
+    parser.add_argument("--tagid", type=int, default=1, help="AprilTag ID to follow")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
     parser.add_argument("--P", type=float, default=0.1, help="Potential tuning")
     parser.add_argument("--I", type=float, default=0.0025, help="Intergral tuning")
     parser.add_argument("--D", type=float, default=0.2, help="Differential tuning")
     args = parser.parse_args()
-    main(args.speed, args.stream, args.P, args.I, args.D)
+    main(args.speed, args.tagid-1, args.stream, args.P, args.I, args.D)
