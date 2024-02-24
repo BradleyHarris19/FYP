@@ -1,7 +1,10 @@
-from Gamepad import Gamepad
+import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
+import paho.mqtt.publish as publish
+
+mqttBroker = "10.0.0.1"
 
 class Drive(object):
     def __init__(self, robot, inSpeed):
@@ -24,9 +27,13 @@ class Drive(object):
     
     def write(self):
         # Calculate left and right motor speeds based on steering and forward values
-        left_speed = self.forward + (self.steering * 0.75) #+ 0.2
-        right_speed = self.forward - (self.steering * 0.75) #+ 0.2
-
+        left_speed = self.forward
+        right_speed = self.forward
+        if (self.steering > 0):
+            left_speed = self.forward + (self.steering * 1.0) #+ 0.2
+        if (self.steering < 0):
+            right_speed = self.forward - (self.steering * 1.0) #+ 0.2
+        
         # Ensure motor speeds stay between 0 and 1
         left_speed = max(-1, min(1, left_speed))
         right_speed = max(-1, min(1, right_speed))
@@ -34,6 +41,10 @@ class Drive(object):
         # Scale the speeds by the overall speed scaler
         left_speed *= self.speed
         right_speed *= self.speed
+
+        publish.single("jetbot1/drive/L", left_speed, hostname=mqttBroker)
+        publish.single("jetbot1/drive/R", right_speed, hostname=mqttBroker)
+        publish.single("jetbot1/drive/S", self.speed, hostname=mqttBroker)
 
         # write to the motors
         self.robot.left_motor.value = left_speed
