@@ -42,7 +42,7 @@ def capture_and_save_image(file_name, width=640, height=480):
 
 num = "_raw"
 # Specify the file name to save the image
-file_name = f"captured_img/captured_image{num}.png"
+file_name = f"../captured_img/captured_image{num}.png"
 
 # Capture and save the image
 capture_and_save_image(file_name)
