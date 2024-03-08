@@ -34,7 +34,7 @@ def capture_and_save_image(file_name, width=640, height=480):
 #for i in range(10):
 i = 9
 # Specify the file name to save the image
-file_name = f"images/{i}.jpg"
+file_name = f"images/calibrate1.jpg"
 
 # Capture and save the image
 capture_and_save_image(file_name)
