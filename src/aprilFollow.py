@@ -136,6 +136,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
                 
                 hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 rot = steering(hor_pos)
+                fwd = forward(distance(tag.corners[2], tag.corners[3]))
                 
                 #print(f"Rotation: {rot:.2f}")
                 #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
@@ -143,7 +144,8 @@ def main(baseSpeed, tagid, stream, p, i, d):
                 #if stream:
                     #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
                 
-                driver.forward = 0.2
+                print(fwd)
+                driver.forward = 0.2 
                 driver.steering = rot
 
             else:
@@ -153,7 +155,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
                 #print("--- nothing ---")
                 detected = False
 
-            driver.write()
+            #driver.write()
             
             if stream: 
                 cam.stream(image)
@@ -166,7 +168,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
             execution_time = time_taken
             fps = int(1/execution_time)
 
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+            #print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
 
     finally:
         robot.stop()
