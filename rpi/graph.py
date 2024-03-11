@@ -26,7 +26,7 @@ while True:
     if len(xList) > 100:
         xList.pop(0)
         LList.pop(0)
-        RLIST.pop(0)
+        RList.pop(0)
 
     drawnow(makeFig)
     plt.pause(0.00001)

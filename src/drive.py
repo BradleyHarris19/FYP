@@ -1,9 +1,11 @@
 import Gamepad
 import time
+import os
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
 import paho.mqtt.publish as publish
 
+bot = os.environ.get('jetbot')
 mqttBroker = "10.0.0.1"
 
 class Drive(object):
@@ -29,6 +31,9 @@ class Drive(object):
         # Calculate left and right motor speeds based on steering and forward values
         left_speed = self.forward
         right_speed = self.forward
+        publish.single(f"{bot}/drive/fwd", left_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/rot", right_speed, hostname=mqttBroker)
+
         if (self.steering > 0):
             left_speed = self.forward + (self.steering * 1.0) #+ 0.2
         if (self.steering < 0):
@@ -42,9 +47,9 @@ class Drive(object):
         left_speed *= self.speed
         right_speed *= self.speed
 
-        publish.single("jetbot1/drive/L", left_speed, hostname=mqttBroker)
-        publish.single("jetbot1/drive/R", right_speed, hostname=mqttBroker)
-        publish.single("jetbot1/drive/S", self.speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/L", left_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/R", right_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/S", self.speed, hostname=mqttBroker)
 
         # write to the motors
         self.robot.left_motor.value = left_speed
