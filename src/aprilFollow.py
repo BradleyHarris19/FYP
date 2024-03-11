@@ -105,7 +105,8 @@ def main(baseSpeed, tagid, stream, p, i, d):
     # 0.25, 0.01, 0.01
     # 0.1, 0.0025, 0.2
     # 0.08. 0.015, 0.2
-    steering = Steering(0.08, 0.005, 0.2, 0)
+    # 0.07, 0.005, 0.2
+    steering = Steering(0.07, 0.0, 0.2, 0)
     forward = Velocity(0.05, 0, 0, 30)
 
     try:
@@ -118,43 +119,32 @@ def main(baseSpeed, tagid, stream, p, i, d):
             tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
             realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == tagid)] 
             
-            #(distance(tag.corners[0], tag.corners[1]) > 15)]
-            #print([tag.decision_margin for tag in realTags])
-            
             if len(realTags) > 0:
-                #print("detected")
                 detected = True
                 tag = realTags[0]
-                #print(distance(tag.corners[0], tag.corners[1]))
                 corners = tag.corners.astype(int)
                 center = tag.center.astype(int)
                 if stream:
                     image = drawCorners(image, tag)
                     image = drawCenter(image, tag)
                     image, tagfamily = drawName(image, tag, corners)
-                #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
                 
-                #fwd = forward(distance(tag.corners[2], tag.corners[3]))
-                #print(float(center[0]) / float(resolution[0]))
-                
-                hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 size = distance(tag.corners[2], tag.corners[3])
+                #fwd = forward(size)
+                hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 rot = steering(hor_pos)
-                fwd = forward(size)
-                #print(fwd)
-                #print(f"Rotation: {rot:.2f}")
-                #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
-
-                #if stream:
-                    #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-                driver.forward = min(0.2, 0.2*fwd)  
-                driver.steering = rot
                 
+                print((20/size)/5)
+
+                driver.forward = min(0.2, (20/size)/5)  
+                #driver.forward = 0.2
+                driver.steering = rot
+                ''' 
                 if size > 30:
                     steering.reset() 
                     driver.forward = 0
                     driver.steering = 0
-
+                '''
             else:
                 steering.reset()
                 driver.forward = 0
@@ -175,7 +165,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
             execution_time = time_taken
             fps = int(1/execution_time)
 
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+            #print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
 
     finally:
         robot.stop()
