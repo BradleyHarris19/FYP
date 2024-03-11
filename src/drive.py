@@ -105,6 +105,6 @@ def main(baseSpeed):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
-    parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
+    parser.add_argument("--speed", type=float, default=0.2, help="Robot speed factor")
     args = parser.parse_args()
     main(args.speed)
