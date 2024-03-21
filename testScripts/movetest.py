@@ -3,7 +3,6 @@
 import time 
 import cv2
 import numpy as np
-import traitlets
 from jetbot import Robot, Camera, bgr8_to_jpeg
 
 

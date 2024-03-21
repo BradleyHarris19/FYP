@@ -110,7 +110,7 @@ def main(baseSpeed, stream, p, i, d):
         robot.stop()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
+    parser = argparse.ArgumentParser(description="Robot Line following script")
     parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
     # 0.025 0 0.25

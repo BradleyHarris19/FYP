@@ -3,7 +3,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Listen to the PID mqtt messages from the jetbot")
 parser.add_argument("--bot", type=str, default="jetbot1", help="jetbot to listen to")
-parser.add_argument("--pid", type=str, default="steering", help="listen to steering or forward pid messages")
+parser.add_argument("--pid", type=str, default="steering", help="listen to steering or velocity pid messages")
 args = parser.parse_args()
 
 while True:
