@@ -136,7 +136,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
                 
                 print((20/size)/5)
 
-                driver.forward = min(0.2, (20/size)/5)  
+                driver.forward = min(0.2, (10/size)/5)  
                 #driver.forward = 0.2
                 driver.steering = rot
                 ''' 

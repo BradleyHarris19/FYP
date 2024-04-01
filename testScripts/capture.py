@@ -40,7 +40,7 @@ def capture_and_save_image(file_name, width=640, height=480):
     except subprocess.CalledProcessError as e:
         print(f"Error transferring file via SCP: {e}")
 
-num = "_raw"
+num = "_uni"
 # Specify the file name to save the image
 file_name = f"../captured_img/captured_image{num}.png"
 
