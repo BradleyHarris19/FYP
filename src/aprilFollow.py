@@ -133,18 +133,10 @@ def main(baseSpeed, tagid, stream, p, i, d):
                 #fwd = forward(size)
                 hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 rot = steering(hor_pos)
-                
-                print((20/size)/5)
 
-                driver.forward = min(0.2, (10/size)/5)  
+                driver.forward = min(0.2, (2/size))  
                 #driver.forward = 0.2
                 driver.steering = rot
-                ''' 
-                if size > 30:
-                    steering.reset() 
-                    driver.forward = 0
-                    driver.steering = 0
-                '''
             else:
                 steering.reset()
                 driver.forward = 0

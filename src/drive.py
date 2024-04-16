@@ -35,9 +35,9 @@ class Drive(object):
         publish.single(f"{bot}/drive/rot", right_speed, hostname=mqttBroker)
 
         if (self.steering > 0):
-            left_speed = self.forward + (self.steering * 1.0) #+ 0.2
+            left_speed = self.forward + (self.steering * 1.0)
         if (self.steering < 0):
-            right_speed = self.forward - (self.steering * 1.0) #+ 0.2
+            right_speed = self.forward - (self.steering * 1.0)
 
         # Ensure motor speeds stay between 0 and 1
         left_speed = max(-1, min(1, left_speed))
