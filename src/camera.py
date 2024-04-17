@@ -59,6 +59,10 @@ class Camera(object):
             print("streaming not enabled")
             return 0
         
+    def __del__(self):
+        self.capture.release()
+        self.clientConnection.close()
+        
 
 
 
