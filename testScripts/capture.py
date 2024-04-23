@@ -1,7 +1,8 @@
 #!/bin/python3.6
-
 import cv2
 import subprocess
+
+# Open a GStreamer pipeline and capture an image, saving it to the captured_img folder and sending it to the downloads folder of the gateway
 
 def capture_and_save_image(file_name, width=640, height=480):
     # Open a connection to the default camera (usually 0)
@@ -17,7 +18,7 @@ def capture_and_save_image(file_name, width=640, height=480):
         print("Error: Could not open camera.")
         return
 
-    # Capture a frame
+    # wait a few ms for the exposure toCapture a frame
     for i in range(10):
         ret, frame = cap.read()
 
@@ -40,7 +41,7 @@ def capture_and_save_image(file_name, width=640, height=480):
     except subprocess.CalledProcessError as e:
         print(f"Error transferring file via SCP: {e}")
 
-num = "_raw"
+num = "_uni"
 # Specify the file name to save the image
 file_name = f"../captured_img/captured_image{num}.png"
 

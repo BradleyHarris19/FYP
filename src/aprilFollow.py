@@ -1,3 +1,19 @@
+#!/bin/python3.6
+"""
+This file contains the implementation of a robot that follows an AprilTag using PID control.
+The robot uses a camera to detect the AprilTag and adjusts its steering and velocity to track the tag.
+
+Classes:
+- Steering: Implements PID control for steering.
+- Velocity: Implements PID control for velocity.
+
+Functions:
+- main: The main function that initializes the robot and controls its movement.
+
+Usage:
+- Run this file with the appropriate command line arguments to adjust the robot's behavior.
+"""
+
 from drive import Drive
 from camera import Camera
 from draw import *
@@ -7,8 +23,10 @@ import numpy as np
 import time
 import argparse
 import cv2
+import os
 import paho.mqtt.publish as publish
 
+bot = os.environ.get('jetbot')
 mqttBroker = "10.0.0.1"
 POLLINTERVAL = 0.01
 
@@ -17,9 +35,9 @@ class Steering:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
-        publish.single("jetbot1/steering/pid/P", kp, hostname=mqttBroker)
-        publish.single("jetbot1/steering/pid/I", ki, hostname=mqttBroker)
-        publish.single("jetbot1/steering/pid/D", kd, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/P", kp, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/I", ki, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
@@ -29,28 +47,25 @@ class Steering:
         self.integral = 0
 
     def __call__(self, current_value:float):
-        publish.single("jetbot1/steering/pid/in", current_value, hostname=mqttBroker)
-        
+        publish.single(f"{bot}/steering/pid/in", current_value, hostname=mqttBroker)
         error = self.setpoint - current_value
-        publish.single("jetbot1/steering/pid/error", error, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/error", error, hostname=mqttBroker)
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
-        publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
-        publish.single("jetbot1/steering/pid/I_term", i_term, hostname=mqttBroker)
+        publish.single(f"{bot}/steering/pid/I_term", i_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
-        publish.single("jetbot1/steering/pid/D_term", d_term, hostname=mqttBroker)
-        
+        publish.single(f"{bot}/steering/pid/D_term", d_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
-        publish.single("jetbot1/steering/pid/out", -output, hostname=mqttBroker)
-
         # Update previous error for the next iteration
         self.prev_error = error
 
+        publish.single(f"{bot}/steering/pid/out", -output, hostname=mqttBroker)
         return -output
         
 class Velocity:
@@ -58,30 +73,34 @@ class Velocity:
         self.kp = kp #
         self.ki = ki
         self.kd = kd
-        publish.single("jetbot1/velocity/pid/P", kp, hostname=mqttBroker)
-        publish.single("jetbot1/velocity/pid/I", ki, hostname=mqttBroker)
-        publish.single("jetbot1/velocity/pid/D", kd, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/P", kp, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/I", ki, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/D", kd, hostname=mqttBroker)
         self.setpoint = setpoint
         self.prev_error = 0
         self.integral = 0
 
     def __call__(self, current_value:int):
+        publish.single(f"{bot}/velocity/pid/in", current_value, hostname=mqttBroker)
         error = self.setpoint - current_value
+        publish.single(f"{bot}/velocity/pid/error", error, hostname=mqttBroker)
         # Proportional term -- The difference between set point and current value
         p_term = self.kp * error
-        publish.single("jetbot1/velocity/pid/P_term", p_term, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/P_term", p_term, hostname=mqttBroker)
         # Integral term -- error over time, if error does not close it increases
         self.integral += error
         i_term = self.ki * self.integral
-        publish.single("jetbot1/velocity/pid/I_term", i_term, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/I_term", i_term, hostname=mqttBroker)
         # Derivative term -- tames the compounding nature of the other variables if increse is rapid
         d_term = self.kd * (error - self.prev_error)
-        publish.single("jetbot1/velocity/pid/D_term", d_term, hostname=mqttBroker)
+        publish.single(f"{bot}/velocity/pid/D_term", d_term, hostname=mqttBroker)
         # PID control output
         output = p_term + i_term + d_term
         # Update previous error for the next iteration
         self.prev_error = error
-
+        
+        output = max(0, output)
+        publish.single(f"{bot}/velocity/pid/out", output, hostname=mqttBroker)
         return output
 
 def main(baseSpeed, tagid, stream, p, i, d):
@@ -102,8 +121,9 @@ def main(baseSpeed, tagid, stream, p, i, d):
     # 0.25, 0.01, 0.01
     # 0.1, 0.0025, 0.2
     # 0.08. 0.015, 0.2
-    steering = Steering(0.08, 0.005, 0.2, 0)
-    forward = Velocity(p, i, d, 50)
+    # 0.07, 0.005, 0.2
+    steering = Steering(0.07, 0.0, 0.2, 0)
+    forward = Velocity(0.05, 0, 0, 30)
 
     try:
         while driver.running:
@@ -115,37 +135,24 @@ def main(baseSpeed, tagid, stream, p, i, d):
             tags = detector.detect(gray_img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
             realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == tagid)] 
             
-            #(distance(tag.corners[0], tag.corners[1]) > 15)]
-            #print([tag.decision_margin for tag in realTags])
-            
             if len(realTags) > 0:
-                #print("detected")
                 detected = True
                 tag = realTags[0]
-                #print(distance(tag.corners[0], tag.corners[1]))
                 corners = tag.corners.astype(int)
                 center = tag.center.astype(int)
                 if stream:
                     image = drawCorners(image, tag)
                     image = drawCenter(image, tag)
                     image, tagfamily = drawName(image, tag, corners)
-                #print(f"Tag position  X: {center[0]}, Y: {center[1]}")
                 
-                #fwd = forward(distance(tag.corners[2], tag.corners[3]))
-                #print(float(center[0]) / float(resolution[0]))
-                
+                size = distance(tag.corners[2], tag.corners[3])
+                #fwd = forward(size)
                 hor_pos = 2*(float(center[0]) / float(resolution[0])) - 1.0
                 rot = steering(hor_pos)
-                
-                #print(f"Rotation: {rot:.2f}")
-                #print(f"forward: {fwd:.2f}, Rotation: {rot:.2f}")
 
-                #if stream:
-                    #cv2.putText(image, f"{rot} == {fwd}", (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
-                
-                driver.forward = 0.2
+                driver.forward = min(0.2, (2/size))  
+                #driver.forward = 0.2
                 driver.steering = rot
-
             else:
                 steering.reset()
                 driver.forward = 0
@@ -166,7 +173,7 @@ def main(baseSpeed, tagid, stream, p, i, d):
             execution_time = time_taken
             fps = int(1/execution_time)
 
-            print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
+            #print(f"Left Motor: {robot.left_motor.value:.2f}, Right Motor: {robot.right_motor.value:.2f}, Speed: {driver.speed:.2f}, Loop Speed: {execution_time:.3f} = {int(1/execution_time)}FPS, Detected: {detected}")
 
     finally:
         robot.stop()

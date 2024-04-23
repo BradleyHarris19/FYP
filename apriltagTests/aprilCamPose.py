@@ -1,8 +1,10 @@
+#!/bin/python3.6
 import cv2
 import socket
 import pickle
 import struct
 import numpy as np
+import time
 from dt_apriltags import Detector
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,7 +54,7 @@ while True:
         continue
     
     #print(f"============== image shape: {image.shape}")
-    tags = detector.detect(img, estimate_tag_pose=False, camera_params=[fx, fy, cx, cy], tag_size=0.03)
+    tags = detector.detect(img, estimate_tag_pose=True, camera_params=[fx, fy, cx, cy], tag_size=0.03)
     realTags = [tag for tag in tags if (tag.decision_margin > 1) and (tag.tag_id == 0)]
     #print([tag.decision_margin for tag in realTags])
 
@@ -87,11 +89,13 @@ while True:
         #print(f"[INFO] tag family: {tagFamily}")
 
         #print(r.homography)
-        _, R, T, N = cv2.decomposeHomographyMat(r.homography, mtx)
+        #_, R, T, N = cv2.decomposeHomographyMat(r.homography, mtx)
 
-        R = np.array(R, np.float64)
-        T = np.array(T, np.float64)
-        N = np.array(N, np.float64)
+        #R = np.array(R, np.float64)
+        #T = np.array(T, np.float64)
+        #N = np.array(N, np.float64)
+        R = r.pose_R
+        T = r.pose_t.reshape(3, 1)
 
         #print(f"Rotation matrix: {type(R)} {R.shape} \n{R}")
         #print(f"Translation vector: {type(T)} {T.shape} \n{T}")
@@ -99,16 +103,17 @@ while True:
         """
         #axes = 2*np.sqrt((ptA[0] - ptB[0])**2 + (ptB[1] - ptA[1])**2)
         #print(axes)
-        axis = np.float32([[1,0,0], [0,1,0], [0,0,-1]]).reshape(-1,3)
+        """
+        axis = np.float32([[-0.1,0,0], [0,0.1,0], [0,0,-0.1]]).reshape(-1,3)
         # project 3D points to image plane
-        imgpts, jac = cv2.projectPoints(axis, R[1], T[1], mtx, dist)
+        imgpts, jac = cv2.projectPoints(axis, R[1], T, mtx, dist)
         print(imgpts)
 
         corner = ptC
         cv2.line(image, corner, tuple(imgpts[0].ravel()), (255,0,0), 1)
         cv2.line(image, corner, tuple(imgpts[1].ravel()), (0,255,0), 1)
         cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 1)
-        """
+    
     image = cv2.resize(image, (320, 240))
     frame_data = pickle.dumps(image)
     client_socket.sendall(struct.pack("Q", len(frame_data)))

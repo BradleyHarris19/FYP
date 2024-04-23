@@ -1,9 +1,10 @@
 #!/bin/python3.6
-
 import cv2
 import socket
 import pickle
 import struct
+
+# Create a socket object and stream the video captured from the CSI camera on port 5555
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(('0.0.0.0', 5555))

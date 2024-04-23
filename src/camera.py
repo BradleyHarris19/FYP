@@ -1,3 +1,19 @@
+#!/bin/python3.6
+"""
+This file contains the implementation of a camera class that starts a Gstreamer pipeline, captures images from the CSI camera, 
+undistorsts them, and can stream the frames over a websocket connection.
+
+Classes:
+- Camera: Implements the camera class to capture images from the CSI camera.
+
+Functions:
+- startSocket: Starts a socket connection to stream frames.
+- main: The main function that starts the camera and streams frames.
+
+Usage:
+- Run this file with the appropriate command line arguments to start the camera and stream frames.
+"""
+
 import numpy as np
 import cv2
 import socket
@@ -58,6 +74,10 @@ class Camera(object):
         else:
             print("streaming not enabled")
             return 0
+        
+    def __del__(self):
+        self.capture.release()
+        self.clientConnection.close()
         
 
 

@@ -1,3 +1,4 @@
+#!/bin/python3.6
 import time
 import argparse
 import cv2
@@ -8,6 +9,8 @@ import struct
 from Gamepad import Gamepad
 from jetbot import Robot, Camera, bgr8_to_jpeg
 from dt_apriltags import Detector
+
+# the first attempt at combinging the teleop and apriltag detection, an inital templete for the final aprilFollow script
 
 # Gamepad settings
 gamepadType = Gamepad.PG9099

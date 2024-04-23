@@ -1,3 +1,4 @@
+#!/bin/python3.6
 from drive import Drive
 from camera import Camera
 from draw import *
@@ -6,8 +7,10 @@ import numpy as np
 import time
 import argparse
 import cv2
+import os
 import paho.mqtt.publish as publish
 
+bot = os.environ.get('jetbot')
 mqttBroker = "10.0.0.1"
 POLLINTERVAL = 0.01
 
@@ -63,21 +66,21 @@ def main(baseSpeed, stream, p, i, d):
                 angle = np.arctan2(line_drift, view_distance)
 
             # calculate steering using pd controller
-            publish.single("jetbot1/steering/pid/error", angle, hostname=mqttBroker)
+            publish.single(f"{bot}/steering/pid/error", angle, hostname=mqttBroker)
             # Proportional term -- The difference between set point and current value
             p_term = kp * angle
-            publish.single("jetbot1/steering/pid/P_term", p_term, hostname=mqttBroker)
+            publish.single(f"{bot}/steering/pid/P_term", p_term, hostname=mqttBroker)
             # Integral term -- error over time, if error does not close it increases
             integral += angle
             i_term = ki * integral
-            publish.single("jetbot1/steering/pid/I_term", i_term, hostname=mqttBroker)
+            publish.single(f"{bot}/steering/pid/I_term", i_term, hostname=mqttBroker)
             # Derivative term -- tames the compounding nature of the other variables if increse is rapid
             d_term = kd * (angle - angle_last)
-            publish.single("jetbot1/steering/pid/D_term", d_term, hostname=mqttBroker)
+            publish.single(f"{bot}/steering/pid/D_term", d_term, hostname=mqttBroker)
     
             # PID control output
             rot = p_term + i_term + d_term
-            publish.single("jetbot1/steering/pid/out", rot, hostname=mqttBroker)
+            publish.single(f"{bot}/steering/pid/out", rot, hostname=mqttBroker)
 
             #rot = angle * kp + (angle - angle_last) * kd
             angle_last = angle
@@ -108,7 +111,7 @@ def main(baseSpeed, stream, p, i, d):
         robot.stop()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
+    parser = argparse.ArgumentParser(description="Robot Line following script")
     parser.add_argument("--speed", type=float, default=1.0, help="Robot speed factor")
     parser.add_argument("--stream", type=bool, default=False, help="stream video over port 5555/5565")
     # 0.025 0 0.25

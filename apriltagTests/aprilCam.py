@@ -1,3 +1,4 @@
+#!/bin/python3.6
 import time
 import cv2
 import socket
@@ -6,7 +7,7 @@ import struct
 import numpy as np
 from dt_apriltags import Detector
 
-"""
+
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     server_socket.bind(('0.0.0.0', 5555))
@@ -18,7 +19,7 @@ server_socket.listen(5)
 print(f"Server is listening on port {port}...")
 client_socket, client_address = server_socket.accept()
 print(f"Connection from {client_address} accepted")
-"""
+
 # Create a GStreamer pipeline for the CSI camera
 video_source=0
 gst_str = f'nvarguscamerasrc sensor-id={video_source} ! video/x-raw(memory:NVMM), width=480, height=360,\
@@ -63,7 +64,6 @@ while True:
     elapsed_time = current_time - prev_time
     
     if len(realTags) > 0:
-    #for r in realTags:  
         r = realTags[0]
 
         # extract the bounding box (x, y)-coordinates for the AprilTag # and convert each of the (x, y)-coordinate pairs to integers

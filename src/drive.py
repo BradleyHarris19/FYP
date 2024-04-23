@@ -1,9 +1,24 @@
+#!/bin/python3.6
+"""
+This file contains the implementation of a drive class that controls the robot's movement.
+
+Classes:
+- Drive: Implements the robot's movement control logic.
+
+Functions:
+- main: The main function that initializes the robot and exposes teleoperation to control the bots movement with a gamepad.
+
+Usage:
+- Run this file with the appropriate command line arguments to control the robot's movement with a gamepad.
+"""
 import Gamepad
 import time
+import os
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
 import paho.mqtt.publish as publish
 
+bot = os.environ.get('jetbot')
 mqttBroker = "10.0.0.1"
 
 class Drive(object):
@@ -29,10 +44,13 @@ class Drive(object):
         # Calculate left and right motor speeds based on steering and forward values
         left_speed = self.forward
         right_speed = self.forward
+        publish.single(f"{bot}/drive/fwd", left_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/rot", right_speed, hostname=mqttBroker)
+
         if (self.steering > 0):
-            left_speed = self.forward + (self.steering * 1.0) #+ 0.2
+            left_speed = self.forward + (self.steering * 1.0)
         if (self.steering < 0):
-            right_speed = self.forward - (self.steering * 1.0) #+ 0.2
+            right_speed = self.forward - (self.steering * 1.0)
 
         # Ensure motor speeds stay between 0 and 1
         left_speed = max(-1, min(1, left_speed))
@@ -42,9 +60,9 @@ class Drive(object):
         left_speed *= self.speed
         right_speed *= self.speed
 
-        publish.single("jetbot1/drive/L", left_speed, hostname=mqttBroker)
-        publish.single("jetbot1/drive/R", right_speed, hostname=mqttBroker)
-        publish.single("jetbot1/drive/S", self.speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/L", left_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/R", right_speed, hostname=mqttBroker)
+        publish.single(f"{bot}/drive/S", self.speed, hostname=mqttBroker)
 
         # write to the motors
         self.robot.left_motor.value = left_speed
@@ -100,6 +118,6 @@ def main(baseSpeed):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Teleoperation with Keyboard")
-    parser.add_argument("--speed", type=float, default=0.5, help="Robot speed factor")
+    parser.add_argument("--speed", type=float, default=0.2, help="Robot speed factor")
     args = parser.parse_args()
     main(args.speed)

@@ -162,3 +162,11 @@ cython_debug/
 # directories
 output_frames/
 calibration/calibration.npy
+recordings/
+assets/
+jetbot/
+.DS_Store
+captured_img/
+testScripts/.DS_Store
+calibration/checkerboards
+calibration/images

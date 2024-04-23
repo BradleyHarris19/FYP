@@ -1,3 +1,4 @@
+#!/bin/python3.6
 import cv2
 import numpy as np
 from dt_apriltags import Detector 

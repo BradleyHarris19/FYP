@@ -1,8 +1,11 @@
+#!/bin/python3
 import matplotlib.pyplot as plt
 from drawnow import drawnow
 import numpy as np
 import paho.mqtt.subscribe as subscribe
 
+# This script attempts to plot the left and right motor values from the jetbot MQTT messages in real time
+# The script does not work as intended as the graph does not update correctly and laggs behind
 def makeFig():
     plt.scatter(xList,LList)
     plt.scatter(xList,RList)
@@ -26,7 +29,7 @@ while True:
     if len(xList) > 100:
         xList.pop(0)
         LList.pop(0)
-        RLIST.pop(0)
+        RList.pop(0)
 
     drawnow(makeFig)
     plt.pause(0.00001)
