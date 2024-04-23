@@ -1,5 +1,5 @@
 #!/bin/python3.6
-# src https://learnopencv.com/camera-calibration-using-opencv/
+# THIS IS NOT MY WORK ALL CREDIT TO Satya Mallick and is article at https://learnopencv.com/camera-calibration-using-opencv/
 
 import cv2
 import numpy as np

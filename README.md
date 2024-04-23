@@ -5,4 +5,4 @@ This project aims to emulate the Leader-Follower paradigm by developing and merg
 ![](resources/FPY%20architecture.png)
 
 ## Report
-![](resources/FYP%20Report.pdf)
+![](resources/FYP_Report.pdf)
