@@ -1,3 +1,16 @@
+#!/bin/python3.6
+"""
+This file contains the implementation of a drive class that controls the robot's movement.
+
+Classes:
+- Drive: Implements the robot's movement control logic.
+
+Functions:
+- main: The main function that initializes the robot and exposes teleoperation to control the bots movement with a gamepad.
+
+Usage:
+- Run this file with the appropriate command line arguments to control the robot's movement with a gamepad.
+"""
 import Gamepad
 import time
 import os

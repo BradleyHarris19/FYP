@@ -5,6 +5,8 @@ import socket
 import pickle
 import struct
 
+# Opens the Web Socket to stream the video from the Jetbot displaying it on the GUI on the Raspberry Pi
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     client_socket.connect(('10.0.0.10', 5555))

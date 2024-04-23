@@ -1,3 +1,4 @@
+#!/bin/python3.6
 from drive import Drive
 from camera import Camera
 from draw import *

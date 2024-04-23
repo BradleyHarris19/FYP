@@ -1,3 +1,17 @@
+#!/bin/python3.6
+"""
+This file holds the draw functions for the AprilTag detection.
+
+Functions:
+- drawCorners: Draws lines between the corners of the AprilTag on the image.
+- drawCenter: Draws the center of the AprilTag on the image.
+- drawName: Draws the tag family name on the image.
+- distance: Calculates the distance between two points.
+
+Usage:
+- Functions to be imported to to the main script for drawing the AprilTag detection.
+"""
+
 import cv2
 import numpy as np
 

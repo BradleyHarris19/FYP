@@ -1,12 +1,8 @@
 # Leader follower movement control
-This project aims to emulate the leader-follower paradigm through developing and merging
-a variety of vision and movement control algorithms implemented on a group of mobile robots.
-This is in effort to effectively implement leader-follower movement, with an emphasis on
-tracking performance, algorithmic simplicity and cost. The Leader leads the Follower either
-by line following on a track, using a pre-programmed course or following another subject. The
-following robot then uses its camera to track the position, velocity and course of the leader in
-an attempt to emulate its path accurately.
+This project aims to emulate the Leader-Follower paradigm by developing and merging a variety of vision and movement control algorithms implemented on a group of mobile robots. The hardware used comprised two Waveshare Jetbots based on the NVIDIA Jetson Nano and a Raspberry Pi. For the vision system, Apriltags were utilised as real-world markers to track the Leader, whilst the Follower kept the tag at a set distance and in the centre of the camera's field of view. To achieve this an initial architecture based on the ROS robotics software framework was proposed but due to unforeseen issues, a pivot to a Python-based approach was needed. The produced system allowed the Follower to follow effectively without the need for any supporting data to be passed from the Leader. However, the system suffered from some mechanical limitations that caused poor performance on high-friction surfaces. 
 
-## Hardware and archetecture
-Utilising a Rapberry Pi as a gateway, hosting a wireless network and running an MQTT broker. This project uses two Waveshare [jetbots](https://www.waveshare.com/wiki/JetBot_AI_Kit) as the agents.
-![](assets/FPY%20architecture.png)
+## Archetecture
+![](resources/FPY%20architecture.png)
+
+## Report
+![](resources/FYP%20Report.pdf)

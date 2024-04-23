@@ -1,5 +1,4 @@
-#!/bin/python3
-
+#!/bin/python3.6
 # src https://learnopencv.com/camera-calibration-using-opencv/
 
 import cv2

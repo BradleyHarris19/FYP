@@ -1,5 +1,8 @@
+#!/bin/python3
 import paho.mqtt.subscribe as subscribe 
 import argparse
+
+# This script listens to the PID mqtt messages from the jetbot
 
 parser = argparse.ArgumentParser(description="Listen to the PID mqtt messages from the jetbot")
 parser.add_argument("--bot", type=str, default="jetbot1", help="jetbot to listen to")

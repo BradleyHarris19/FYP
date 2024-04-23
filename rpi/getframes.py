@@ -1,5 +1,8 @@
+#!/bin/python3
 import cv2
 import os
+
+# Save all of the frames from the video file to the output folder as jpg images
 
 def save_frames(input_file, output_folder):
     video_capture = cv2.VideoCapture(input_file)

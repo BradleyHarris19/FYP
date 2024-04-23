@@ -1,7 +1,10 @@
+#!/bin/python3
 import cv2
 import socket
 import pickle
 import struct
+
+# Opens the Web Socket to stream the video from the Jetbot displaying it on the GUI on the Raspberry Pi and recording it into an MP4 file
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

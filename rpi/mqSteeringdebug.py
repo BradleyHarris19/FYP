@@ -1,5 +1,8 @@
+#!/bin/python3
 import paho.mqtt.subscribe as subscribe 
 import argparse
+
+# This script listens to the Steering mqtt messages from the jetbot
 
 parser = argparse.ArgumentParser(description="Listen to the mqtt messages from the jetbot when line following")
 parser.add_argument("--bot", type=str, default="jetbot1", help="jetbot to listen to")

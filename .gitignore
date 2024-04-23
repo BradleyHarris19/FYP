@@ -162,5 +162,11 @@ cython_debug/
 # directories
 output_frames/
 calibration/calibration.npy
-recordings/Movie on 01-04-2024 at 16.13.mov
-/assets
+recordings/
+assets/
+jetbot/
+.DS_Store
+captured_img/
+testScripts/.DS_Store
+calibration/checkerboards
+calibration/images

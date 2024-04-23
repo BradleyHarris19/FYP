@@ -1,3 +1,19 @@
+#!/bin/python3.6
+"""
+This file contains the implementation of a robot that follows an AprilTag using PID control.
+The robot uses a camera to detect the AprilTag and adjusts its steering and velocity to track the tag.
+
+Classes:
+- Steering: Implements PID control for steering.
+- Velocity: Implements PID control for velocity.
+
+Functions:
+- main: The main function that initializes the robot and controls its movement.
+
+Usage:
+- Run this file with the appropriate command line arguments to adjust the robot's behavior.
+"""
+
 from drive import Drive
 from camera import Camera
 from draw import *

@@ -1,8 +1,10 @@
-
+#!/bin/python3.6
 from Gamepad import Gamepad
 import time
 from jetbot import Robot, Camera, bgr8_to_jpeg
 import argparse
+
+# The teleop test script to drive the motors on the Jetbot with the controller connected
 
 # Gamepad settings
 gamepadType = Gamepad.PG9099
